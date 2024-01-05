@@ -39,6 +39,15 @@ Section orders.
     split; try apply _.
     eauto using strict_transitive_r, strict_include.
   Qed.
+
+  Elpi Accumulate TC.Solver lp:{{
+    tc-stdpp.base.tc-Decision T S :-
+      coq.safe-dest-app T (global {{:gref strict}}) _,
+      AND = {{and _ _}},
+      coq.unify-eq T AND ok,
+      tc-stdpp.base.tc-Decision AND S.
+  }}.
+
   Global Instance preorder_subset_dec_slow `{!RelDecision R} :
     RelDecision (strict R) | 100.
   Proof. solve_decision. Defined.

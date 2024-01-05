@@ -38,6 +38,18 @@ Global Instance: Params (@NoDup) 1 := {}.
 Global Arguments Permutation {_} _ _ : assert.
 Global Arguments Forall_cons {_} _ _ _ _ _ : assert.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Inj A B C D {{S}} S :-
+    tc-stdpp.base.tc-Inj A B C D {{Nat.succ}} S.
+}}.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Decision {{@Forall lp:A lp:X lp:Y}} 
+    {{@Forall_dec lp:A lp:X (fun x : lp:A => lp:(P x)) lp:Y}} :-
+    (fun _ _ X') = X,
+    pi z\ tc-stdpp.base.tc-Decision (X' z) (P z).
+}}.
+
 Notation "(::)" := cons (only parsing) : list_scope.
 Notation "( x ::.)" := (cons x) (only parsing) : list_scope.
 Notation "(.:: l )" := (λ x, cons x l) (only parsing) : list_scope.
@@ -195,6 +207,11 @@ Fixpoint reshape {A} (szs : list nat) (l : list A) : list (list A) :=
   | [] => [] | sz :: szs => take sz l :: reshape szs (drop sz l)
   end.
 Global Instance: Params (@reshape) 2 := {}.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision A B {{le}} S :-
+    tc-stdpp.base.tc-RelDecision A B {{Nat.le}} S.
+}}.
 
 Definition sublist_lookup {A} (i n : nat) (l : list A) : option (list A) :=
   guard (i + n ≤ length l);; Some (take n (drop i l)).
@@ -2036,6 +2053,12 @@ Proof.
         by rewrite Nat.sub_0_r, <-Hl.
 Qed.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Decision T S :-
+    fun-contract T R,
+    if (same_term T R) fail (tc-stdpp.base.tc-Decision R S).
+}}.
+
 (** ** Properties of the [filter] function *)
 Section filter.
   Context (P : A → Prop) `{∀ x, Decision (P x)}.
@@ -2087,7 +2110,6 @@ Section filter.
     rewrite reverse_cons, filter_app, IHl, !filter_cons.
     case_decide; [by rewrite reverse_cons|by rewrite filter_nil, app_nil_r].
   Qed.
-
   Lemma filter_app_complement l : filter P l ++ filter (λ x, ¬P x) l ≡ₚ l.
   Proof.
     induction l as [|x l IH]; simpl; [done|]. case_decide.
@@ -3794,8 +3816,11 @@ Section setoid.
   Proof. induction i; destruct 1; try constructor; eauto. Qed.
   Global Instance option_list_proper : Proper ((≡) ==> (≡@{list A})) option_list.
   Proof. destruct 1; repeat constructor; auto. Qed.
+  Elpi Override TC TC.Solver None.
   Global Instance list_filter_proper P `{∀ x, Decision (P x)} :
     Proper ((≡) ==> iff) P → Proper ((≡) ==> (≡@{list A})) (filter P).
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.
   Proof. intros ???. rewrite !list_equiv_Forall2. by apply Forall2_filter. Qed.
   Global Instance replicate_proper n : Proper ((≡@{A}) ==> (≡)) (replicate n).
   Proof. induction n; constructor; auto. Qed.
@@ -3852,6 +3877,12 @@ Section setoid.
     by exists l2'.
   Qed.
 End setoid.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Decision X S :-
+    coq.redflags.betadeltazeta => coq.reduction.lazy.whd X Y,
+    if (same_term X Y) fail (tc-stdpp.base.tc-Decision Y S).
+}}.
 
 (** * Properties of the [find] function *)
 Section find.

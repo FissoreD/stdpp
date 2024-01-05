@@ -22,3 +22,7 @@ that bullets and curly braces must be used to structure the proof. *)
 this file everywhere.
 From stdpp Require Import options.
 *)
+
+From elpi Require Export tc.
+Elpi Override TC TC.Solver All.
+(* Global Set TC CompilerWithPatternFragment. *)

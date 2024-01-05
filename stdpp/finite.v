@@ -1,12 +1,24 @@
 From stdpp Require Export countable vector.
 From stdpp Require Import options.
 
+(* #[mode(i, o)] TC.Declare  *)
 Class Finite A `{EqDecision A} := {
   enum : list A;
   (* [NoDup] makes it easy to define the cardinality of the type. *)
   NoDup_enum : NoDup enum;
   elem_of_enum x : x ∈ enum
 }.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Inj B C R2 R3 F
+    {{@inj2_inj_2 lp:A lp:B lp:C lp:R1 lp:R2 lp:R3 lp:HD lp:S lp:X}} :-
+        F = app L,
+        LSplit is {std.length L} - 1,
+        std.split-at LSplit L HD' [X],
+        if (std.length HD' 1) (HD' = [HD]) (HD = app HD'),
+        tc-stdpp.base.tc-Inj2 A B C R1 R2 R3 HD S.
+}}.
+
 Global Hint Mode Finite ! - : typeclass_instances.
 Global Arguments enum : clear implicits.
 Global Arguments enum _ {_ _} : assert.
@@ -26,7 +38,7 @@ Next Obligation.
   destruct (list_find_Some (x =.) xs i y); naive_solver.
 Qed.
 Global Hint Immediate finite_countable : typeclass_instances.
-
+Elpi TC.AddInstances 0 finite_countable.
 Definition find `{Finite A} (P : A → Prop) `{∀ x, Decision (P x)} : option A :=
   list_find P (enum A) ≫= decode_nat ∘ fst.
 
@@ -310,7 +322,16 @@ Next Obligation.
 Qed.
 Next Obligation.
   intros ?????? [a b]. apply elem_of_list_bind.
-  exists a. eauto using elem_of_enum, elem_of_list_fmap_1.
+  exists a.
+  Elpi TC.Get_class_info Finite.
+  Elpi Accumulate TC.Solver lp:{{
+    :name "remove" :before "eapply" eapply :- coq.say "CIAO".
+    :before "print-goal" print-goal :- !.
+    % :after "0" msolve L _ :- coq.say "The goal list is:" L, fail.
+  }}.
+  (* Elpi Trace Browser. *)
+  (* Elpi Print TC.Solver. *)
+  eauto using elem_of_enum, elem_of_list_fmap_1.
 Qed.
 Lemma prod_card `{Finite A} `{Finite B} : card (A * B) = card A * card B.
 Proof.

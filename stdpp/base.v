@@ -14,6 +14,11 @@ Export ListNotations.
 From Coq.Program Require Export Basics Syntax.
 From stdpp Require Import options.
 
+Elpi TC.AddAllClasses.
+Elpi TC.AddAllInstances.
+
+Elpi Override TC - Proper ProperProxy.
+
 (** This notation is necessary to prevent [length] from being printed
 as [strings.length] if strings.v is imported and later base.v. See
 also strings.v and
@@ -378,8 +383,32 @@ an explicit class instead of a notation for two reasons:
   [decide (f x = f y)], this would then lead to evaluation of [f x] and [f y].
   Using the [RelDecision], the [f] is hidden under a lambda, which prevents
   unnecessary evaluation. *)
+
+(* Elpi Accumulate TC.Compiler lp:{{
+  :after "0"
+  main [str Inst, str Cl, str Locality, int Prio] :- !,
+    coq.locate Cl GRCl,
+    coq.locate Inst GRInst,
+    coq.env.typeof GRInst T,
+    coq.say GRInst T,
+    add-inst GRInst GRCl Locality Prio.
+
+  main [str Cl] :- !,
+    coq.locate Cl GR,
+    add-class-gr classic GR.
+
+  main A :- coq.error "Fail in TC.Compiler: not a valid input entry" A.
+}}.
+Elpi Trace Browser. *)
+
 Class RelDecision {A B} (R : A → B → Prop) :=
   decide_rel x y :> Decision (R x y).
+
+(* Elpi Query TC.Solver lp:{{
+  coq.env.typeof {{:gref decide_rel}} S.
+}}.
+xx. *)
+
 Global Hint Mode RelDecision ! ! ! : typeclass_instances.
 Global Arguments decide_rel {_ _} _ {_} _ _ : simpl never, assert.
 Notation EqDecision A := (RelDecision (=@{A})).
@@ -872,6 +901,30 @@ instances *)
 Section prod_setoid.
   Context `{Equiv A, Equiv B}.
 
+  Elpi Accumulate  TC.Solver lp:{{
+    pred remove_equiv_prod_equiv i:term, o:term.
+    remove_equiv_prod_equiv T1 T3 :-
+      T1 = {{@equiv _ (@prod_equiv _ _ _ _)}},
+      T2 = {{@prod_relation lp:F lp:G lp:A lp:B}},
+      coq.unify-eq T1 T2 ok, 
+      remove_equiv_prod_equiv A X,
+      remove_equiv_prod_equiv B Y,
+      {{@prod_relation lp:F lp:G lp:X lp:Y}} = T3.
+    remove_equiv_prod_equiv (app L1) (app L2) :-
+      std.map L1 remove_equiv_prod_equiv L2.
+    remove_equiv_prod_equiv A A.
+
+    tc-Coq.Classes.RelationClasses.tc-Equivalence T R S :-
+      R = app [global {{:gref equiv}} | _],
+      remove_equiv_prod_equiv R R',
+      tc-Coq.Classes.RelationClasses.tc-Equivalence T R' S.
+
+    tc-stdpp.base.tc-Inj2  A B C R1 R2 R3 F S :-
+      R3 = app [global {{:gref equiv}} | _],
+      remove_equiv_prod_equiv R3 Res,
+      tc-stdpp.base.tc-Inj2  A B C R1 R2 Res F S.
+  }}.
+
   Global Instance prod_equivalence :
     Equivalence (≡@{A}) → Equivalence (≡@{B}) → Equivalence (≡@{A * B}) := _.
 
@@ -964,6 +1017,26 @@ End sum_relation.
 Global Instance sum_equiv `{Equiv A, Equiv B} : Equiv (A + B) := sum_relation (≡) (≡).
 Global Instance inl_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inl A B) := _.
 Global Instance inr_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inr A B) := _.
+
+Elpi Accumulate TC.Solver lp:{{
+    pred remove_equiv_sum_equiv i:term, o:term.
+    remove_equiv_sum_equiv T1 T3 :-
+      T1 = {{@equiv _ (@sum_equiv _ _ _ _)}}, 
+      T2 = {{@sum_relation lp:F lp:G lp:A lp:B}},
+      coq.unify-eq T1 T2 ok, 
+      remove_equiv_sum_equiv A X,
+      remove_equiv_sum_equiv B Y,
+      {{@sum_relation lp:F lp:G lp:X lp:Y}} = T3.
+    remove_equiv_sum_equiv (app L1) (app L2) :- 
+      std.map L1 remove_equiv_sum_equiv L2.
+    remove_equiv_sum_equiv A A.
+    
+    :after "lastHook" 
+    tc-stdpp.base.tc-Inj A B R1 R2 F S :-
+      remove_equiv_sum_equiv R2 R2',
+      if (same_term R2 R2') fail
+        (tc-stdpp.base.tc-Inj A B R1 R2' F S).
+}}.
 Global Instance inl_equiv_inj `{Equiv A, Equiv B} : Inj (≡) (≡) (@inl A B) := _.
 Global Instance inr_equiv_inj `{Equiv A, Equiv B} : Inj (≡) (≡) (@inr A B) := _.
 Global Typeclasses Opaque sum_equiv.
@@ -1614,3 +1687,31 @@ Class Half A := half: A → A.
 Global Hint Mode Half ! : typeclass_instances.
 Notation "½" := half (format "½") : stdpp_scope.
 Notation "½*" := (fmap (M:=list) half) : stdpp_scope.
+
+Elpi Accumulate TC.Solver lp:{{
+  :replace "stdpp.base.decide_rel"
+  tc-stdpp.base.tc-Decision R {{@decide_rel lp:A lp:B lp:HD lp:S lp:X lp:Y}} :-
+    R = app L,
+    LSplit is {std.length L} - 2,
+    std.split-at LSplit L HD' [X, Y],
+    if (std.length HD' 1) (HD' = [HD]) (HD = app HD'),
+    tc-stdpp.base.tc-RelDecision A B HD S.
+}}.
+
+Elpi Accumulate TC.Solver lp:{{
+  :replace "stdpp.base.partial_order_pre"
+  tc-Coq.Classes.RelationClasses.tc-PreOrder T R (app [global {{:gref partial_order_pre}}, T, R, S]) :-
+    tc-stdpp.base.tc-PartialOrder T R S.
+
+  :replace "stdpp.base.total_order_partial"
+  tc-stdpp.base.tc-PartialOrder A R {{total_order_partial lp:A lp:R lp:S}} :-
+    tc-stdpp.base.tc-TotalOrder A R S.
+}}.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Inj A B R1 R3 F S :- 
+    F = (fun _ _ C), !,
+    G = {{ compose _ _}},
+    coq.unify-eq G F ok,
+    tc-stdpp.base.tc-Inj A B R1 R3 G S.
+}}.

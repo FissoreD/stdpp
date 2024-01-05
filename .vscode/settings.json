@@ -1,0 +1,17 @@
+{
+  "files.exclude": {
+    // "**/*.vo": true,
+    "**/*.aux": true,
+    "**/*.vok": true,
+    "**/*.vos": true,
+    "**/*.glob": true,
+    "**/*.coq*": true,
+    "**/*.cache": true,
+    "**/*.ref": true
+  },
+  "python.analysis.typeCheckingMode": "basic",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
+  "python.formatting.provider": "none"
+}

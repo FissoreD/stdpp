@@ -254,6 +254,15 @@ irrelevant. That is [∀ x y : dsig P, x = y ↔ `x = `y]. *)
 Definition dsig `(P : A → Prop) `{∀ x : A, Decision (P x)} :=
   { x | bool_decide (P x) }.
 
+Elpi Accumulate TC.Solver lp:{{
+  pred fun-contract i:term, o:term.
+  fun-contract T R :-
+    (pi f x\ copy (app [fun _ _ f, x]) (f x) :- !) => copy T R.
+  tc-stdpp.base.tc-ProofIrrel T S :-
+    fun-contract T R,
+    if (same_term T R) fail (tc-stdpp.base.tc-ProofIrrel R S).
+}}.
+
 Definition proj2_dsig `{∀ x : A, Decision (P x)} (x : dsig P) : P (`x) :=
   bool_decide_unpack _ (proj2_sig x).
 Definition dexist `{∀ x : A, Decision (P x)} (x : A) (p : P x) : dsig P :=

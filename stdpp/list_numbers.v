@@ -77,6 +77,10 @@ Section seq.
   Proof. intros. by rewrite !list_lookup_total_alt, lookup_seq_lt. Qed.
   Lemma lookup_seq_ge j n i : n ≤ i → seq j n !! i = None.
   Proof. revert j i. induction n; intros j [|i] ?; simpl; auto with lia. Qed.
+  Elpi Accumulate TC.Solver lp:{{
+    :after "0" msolve L N :- !,
+      time-solve (coq.ltac.all (coq.ltac.open solve-aux) L N).
+  }}.
   Lemma lookup_total_seq_ge j n i : n ≤ i → seq j n !!! i = inhabitant.
   Proof. intros. by rewrite !list_lookup_total_alt, lookup_seq_ge. Qed.
   Lemma lookup_seq j n i j' : seq j n !! i = Some j' ↔ j' = j + i ∧ i < n.
@@ -157,6 +161,10 @@ Section seqZ.
       destruct i as [|i]; simpl; [lia|]. by rewrite Z.pred_succ, IH by lia.
     - by rewrite seqZ_nil by lia.
   Qed.
+  Elpi Accumulate TC.Solver lp:{{
+    :after "0" msolve L N :- !,
+      time-solve (coq.ltac.all (coq.ltac.open solve-aux) L N).
+  }}.
   Lemma lookup_total_seqZ_ge m n i : n ≤ Z.of_nat i → seqZ m n !!! i = inhabitant.
   Proof. intros. by rewrite !list_lookup_total_alt, lookup_seqZ_ge. Qed.
   Lemma lookup_seqZ m n i m' : seqZ m n !! i = Some m' ↔ m' = m + Z.of_nat i ∧ Z.of_nat i < n.

@@ -1,0 +1,39 @@
+2024/01/04:
+  prod_eq_dec : needs HO unification
+  decide_rel : is not well compiled
+    type of decide_rel:
+      ∀ {A B : Type} (R : A → B → Prop), 
+        RelDecision R → ∀ (x : A) (y : B), Decision (R x y)
+    instance associated:
+      tc-stdpp.base.tc-Decision (app [A3, A1, A0]) 
+        (app [global (const «decide_rel»), A5, A4, A3, A2, A1, A0]).
+    why we have no premise???
+    ANSWER: the pb is that decide_rel is a field of a type class with coercion.
+      RelDecision is not yet a class (coq.TC.class? fails) and the premise is
+      not added
+  dsig_eq: 
+    when we apply the lemma sig_eq_pi we get a goal on the form ((fun x \ F x) a)
+    why it is not reduced?
+    I have implem a fun-contract with copy, but it is not very pretty...
+  preorder_subset_dec_slow:
+    we have to alias strict to (_ /\ _)
+  option_equivalence:
+    alias for equiv to option_forall2
+
+2024/01/05:
+  use accumulate* to remove universe variables?
+  eq_pi => HO unification
+  Qc_lt_pi => alias pb
+  div_inj_r => compose with lambda (use of compose_inj) -> the elpi rule is in base.v
+  if mode eapply then return GL = [seal G] else fail with error
+  added ad-hoc mode for decision
+  rotate_nat_add_alt : Nat.lt instead of lt (same for le)
+  NoDup_alt: S instead of Nat.succ
+  list_subseteq_dec: HO unification
+  list_filter_proper: has a very strange goal to solve: sort (typ «stdpp.list.9499»)
+  list_find_fmap: need to betadeltazeta reduce the goal
+  lookup_total_seq_ge: !! msolve should give the ordered list (here a toposort would help?)
+    -> same for lookup_total_seqZ_ge
+  finite_countable: is an Hint Immediate
+  prod_finite: HO unif for Inj with instance inj2_inj_2
+  need of TC.Declare in Finite: but it breaks other lemmas...

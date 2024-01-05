@@ -4,7 +4,6 @@ rationals [Qc]). In addition, this file defines a new type of positive rational
 numbers [Qp], which is used extensively in Iris to represent fractional
 permissions.
 
-The organization of this file follows mostly Coq's standard library.
 
 - We put all results in modules. For example, the module [Nat] collects the
   results for type [nat]. Since the Coq stdlib already defines a module [Nat],
@@ -17,7 +16,6 @@ The organization of this file follows mostly Coq's standard library.
   this file are [Global] and not [Export]. Other things like [Arguments] are outside
   the modules, since for them [Global] works like [Export].
 
-The results for [Qc] are not yet in a module. This is in part because they
 still follow the old/non-module style in Coq's standard library. See also
 https://gitlab.mpi-sws.org/iris/stdpp/-/issues/147. *)
 
@@ -27,6 +25,8 @@ From stdpp Require Export base decidable option.
 From stdpp Require Import well_founded.
 From stdpp Require Import options.
 Local Open Scope nat_scope.
+Elpi TC.AddAllClasses.
+Elpi TC.AddAllInstances.
 
 Global Instance comparison_eq_dec : EqDecision comparison.
 Proof. solve_decision. Defined.
@@ -38,6 +38,13 @@ Global Arguments Nat.max : simpl nomatch.
 (** We do not make [Nat.lt] since it is an alias for [lt], which contains the
 actual definition that we want to make opaque. *)
 Global Typeclasses Opaque lt.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-ProofIrrel X S :-
+    Y = {{Z.lt lp:A1 lp:A0}},
+    coq.unify-eq X Y ok,
+    tc-stdpp.base.tc-ProofIrrel Y S.
+}}.
 
 Reserved Notation "x ≤ y ≤ z" (at level 70, y at next level).
 Reserved Notation "x ≤ y < z" (at level 70, y at next level).
@@ -1219,6 +1226,14 @@ Module Qp.
   Lemma three_quarter_quarter : 3 / 4 + 1 / 4 = 1.
   Proof. compute_done. Qed.
 
+  Elpi Accumulate TC.Solver lp:{{
+    tc-stdpp.base.tc-Inj A B R1 R3 F S :- 
+      F = (fun _ _ C), !,
+      G = {{ compose _ _}},
+      coq.unify-eq G F ok,
+      tc-stdpp.base.tc-Inj A B R1 R3 G S.
+  }}.
+
   Global Instance div_inj_r p : Inj (=) (=) (div p).
   Proof. unfold div; apply _. Qed.
   Global Instance div_inj_l p : Inj (=) (=) (λ q, q / p)%Qp.
@@ -1482,6 +1497,15 @@ Module Qp.
   Lemma min_spec_le q p : (q ≤ p ∧ q `min` p = q) ∨ (p ≤ q ∧ q `min` p = p).
   Proof. destruct (min_spec q p) as [[?%lt_le_incl ?]|]; [left|right]; done. Qed.
 
+  Elpi Accumulate TC.Solver lp:{{
+    :after "0"
+    % mode for Decision...
+    tc-stdpp.base.tc-Decision L S :-
+      var L, !, fail.
+
+    :name "remove" eapply :- !.
+  }}.
+
   Global Instance min_assoc : Assoc (=) min.
   Proof.
     intros q p o. unfold min.
@@ -1489,6 +1513,11 @@ Module Qp.
     - by rewrite !decide_True by (by etrans).
     - by rewrite decide_False by (apply lt_nge; etrans; by apply lt_nge).
   Qed.
+
+  Elpi Accumulate TC.Solver lp:{{
+    :replace "remove" eapply :- fail.
+  }}.
+
   Global Instance min_comm : Comm (=) min.
   Proof.
     intros q p.
@@ -1537,12 +1566,10 @@ Local Close Scope Qp_scope.
 (** [rotate_nat_add base offset len] computes [(base + offset) `mod`
 len]. This is useful in combination with the [rotate] function on
 lists, since the index [i] of [rotate n l] corresponds to the index
-[rotate_nat_add n i (length i)] of the original list. The definition
 uses [Z] for consistency with [rotate_nat_sub]. **)
 Definition rotate_nat_add (base offset len : nat) : nat :=
   Z.to_nat ((Z.of_nat base + Z.of_nat offset) `mod` Z.of_nat len)%Z.
 (** [rotate_nat_sub base offset len] is the inverse of [rotate_nat_add
-base offset len]. The definition needs to use modulo on [Z] instead of
 on nat since otherwise we need the sidecondition [base < len] on
 [rotate_nat_sub_add]. **)
 Definition rotate_nat_sub (base offset len : nat) : nat :=
@@ -1552,6 +1579,11 @@ Lemma rotate_nat_add_add_mod base offset len:
   rotate_nat_add base offset len =
   rotate_nat_add (base `mod` len) offset len.
 Proof. unfold rotate_nat_add. by rewrite Nat2Z.inj_mod, Zplus_mod_idemp_l. Qed.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision A B {{lt}} S :-
+    tc-stdpp.base.tc-RelDecision A B {{Nat.lt}} S.
+}}.
 
 Lemma rotate_nat_add_alt base offset len:
   base < len → offset < len →

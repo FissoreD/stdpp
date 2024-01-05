@@ -29,6 +29,14 @@ Proof.
   intros p q. rewrite <-(help _ p), <-(help _ q).
   unfold f at 2 4. destruct (decide _); [reflexivity|]. exfalso; tauto.
 Qed.
+Elpi Accumulate TC.Solver lp:{{
+  :replace "stdpp.proof_irrel.eq_pi"
+  tc-stdpp.base.tc-ProofIrrel {{@Logic.eq lp:A lp:X lp:Y}} 
+    {{@eq_pi lp:A lp:X (fun x : lp:A => lp:(P x)) lp:Y}} :-
+    pi z \
+      % decl z `z` A =>
+      tc-stdpp.base.tc-Decision {{@Logic.eq lp:A lp:X lp:z}} (P z).
+}}.
 Global Instance Is_true_pi (b : bool) : ProofIrrel (Is_true b).
 Proof. destruct b; simpl; apply _. Qed.
 Lemma sig_eq_pi `(P : A → Prop) `{∀ x, ProofIrrel (P x)}

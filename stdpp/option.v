@@ -133,6 +133,14 @@ Section setoids.
   Lemma option_equiv_Forall2 mx my : mx ≡ my ↔ option_Forall2 (≡) mx my.
   Proof. done. Qed.
 
+  Elpi Accumulate TC.Solver lp:{{
+    tc-Coq.Classes.RelationClasses.tc-Equivalence A R S :-
+      R = {{@equiv _ _}},
+      R' = {{@option_Forall2 _ _ _}},
+      coq.unify-eq R R' ok,
+      tc-Coq.Classes.RelationClasses.tc-Equivalence A R' S.
+  }}.
+
   Global Instance option_equivalence :
     Equivalence (≡@{A}) → Equivalence (≡@{option A}).
   Proof. apply _. Qed.

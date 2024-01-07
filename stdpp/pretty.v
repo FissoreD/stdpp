@@ -102,6 +102,14 @@ Proof.
   rewrite (N.div_mod x 10), (N.div_mod y 10) by done. lia.
 Qed.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Inj A B R1 R2 Pretty S :-
+    Pretty = app [{{@pretty}} | _],
+    X = {{λ x : _, _}},
+    coq.unify-eq X Pretty ok,
+    tc-stdpp.base.tc-Inj A B R1 R2 X S.
+}}.
+
 Global Instance pretty_nat : Pretty nat := λ x, pretty (N.of_nat x).
 Global Instance pretty_nat_inj : Inj (=@{nat}) (=) pretty.
 Proof. apply _. Qed.

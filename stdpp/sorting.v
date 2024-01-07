@@ -98,6 +98,18 @@ Section sorted.
     | y :: l => cast_if (decide (R x y))
     end; abstract first [by constructor | by inv 1].
   Defined.
+
+  Elpi Accumulate TC.Solver lp:{{
+    :replace ".sortedstdpp.sorting.HdRel_dec"
+    tc-stdpp.base.tc-Decision
+      {{@HdRel lp:A lp:R lp:A2 lp:A0}}
+      {{@HdRel_dec lp:A2 (fun x => lp:(A1 x)) lp:A0}} :-
+      A = global {{:gref A}},
+      R = global {{:gref R}},
+      pi c0 \
+        tc-stdpp.base.tc-Decision {{lp:R lp:A2 lp:c0}} 
+          (A1 c0).
+  }}.
   Global Instance Sorted_dec `{∀ x y, Decision (R x y)} : ∀ l,
     Decision (Sorted R l).
   Proof.
@@ -108,6 +120,24 @@ Section sorted.
     | x :: l => cast_if_and (decide (HdRel R x l)) (go l)
     end); clear go; abstract first [by constructor | by inv 1].
   Defined.
+  Elpi Accumulate TC.Solver lp:{{
+    :replace ".sortedstdpp.sorting.Sorted_dec"
+    tc-stdpp.base.tc-Decision
+      {{@Sorted lp:A lp:R lp:L}}
+      {{@Sorted_dec (fun x y => lp:(S x y)) lp:L}} :-
+      A = global {{:gref A}},
+      R = global {{:gref R}},
+      pi x y \
+        tc-stdpp.base.tc-Decision {{lp:R lp:x lp:y}} 
+          (S x y).
+  }}.
+  Elpi Accumulate TC.Solver lp:{{
+    tc-stdpp.base.tc-Decision {{@Forall lp:A3 lp:A2 lp:A0}}
+        {{@Forall_dec lp:A3 lp:A2 (fun x => lp:(A1 x)) lp:A0}} :-
+      pi c0 \
+        coq.mk-app A2 [c0] (App c0),
+        tc-stdpp.base.tc-Decision (App c0) (A1 c0).
+  }}.
   Global Instance StronglySorted_dec `{∀ x y, Decision (R x y)} : ∀ l,
     Decision (StronglySorted R l).
   Proof.

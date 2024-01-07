@@ -63,6 +63,8 @@ Tactic Notation "reduce_closed" constr(x) :=
   change_no_check x with r in *
 .
 
+  Elpi Override TC TC.Solver None.
+
 (** * bitblast instances *)
 Lemma bitblast_bool_to_Z b n:
   Bitblast (bool_to_Z b) n (bool_decide (n = 0) && b).
@@ -529,3 +531,6 @@ Ltac bv_solve :=
 
 Class BvSolve (P : Prop) : Prop := bv_solve_proof : P.
 Global Hint Extern 1 (BvSolve ?P) => (change P; bv_solve) : typeclass_instances.
+
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.

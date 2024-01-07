@@ -2,7 +2,29 @@ From stdpp Require Export countable coPset.
 From stdpp Require Import options.
 
 Definition namespace := list positive.
+  Elpi Accumulate TC.Solver lp:{{
+    tc-stdpp.base.tc-RelDecision A B R S :-
+      (copy {{namespace}} {{list positive}}) => 
+      (copy A A', copy B B', copy R R'),
+      if (A == A', B == B', R == R') fail
+        (tc-stdpp.base.tc-RelDecision A' B' R' S).
+  }}.
 Global Instance namespace_eq_dec : EqDecision namespace := _.
+  Elpi Accumulate TC.Solver lp:{{
+    pred reducer i:term, i:term, o:term.
+    reducer RED T R :-
+      global (const CONST) = RED,
+      REDUCABLE = coq.redflags.const CONST,
+      coq.redflags.add coq.redflags.nored [coq.redflags.delta, REDUCABLE] REDLIST,
+      @redflags! REDLIST => coq.reduction.lazy.norm T T',
+      coq.reduction.eta-contract T' R.
+
+    tc-stdpp.countable.tc-Countable A B S :- 
+      reducer {{namespace}} A A',
+      reducer {{namespace_eq_dec}} B B',
+      if (A == A', B == B') fail
+        (tc-stdpp.countable.tc-Countable A' B' S).
+  }}.
 Global Instance namespace_countable : Countable namespace := _.
 Global Typeclasses Opaque namespace.
 

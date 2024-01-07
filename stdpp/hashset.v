@@ -16,8 +16,14 @@ Global Arguments hashset_car {_ _} _ : assert.
 Section hashset.
 Context `{EqDecision A} (hash : A → Z).
 
+  Elpi Accumulate TC.Solver lp:{{
+    :after "0" msolve L N :- !,
+      time-solve (coq.ltac.all (coq.ltac.open solve-aux) L N).
+  }}.
 Global Instance hashset_elem_of: ElemOf A (hashset hash) := λ x m, ∃ l,
   hashset_car m !! hash x = Some l ∧ x ∈ l.
+
+    Elpi Override TC TC.Solver None.
 
 Global Program Instance hashset_empty: Empty (hashset hash) := Hashset ∅ _.
 Next Obligation. by intros n X; simpl_map. Qed.
@@ -155,3 +161,6 @@ Proof.
   destruct X as [l]. apply set_equiv; intro; apply elem_of_remove_dups_fast.
 Qed.
 End remove_duplicates.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.
+

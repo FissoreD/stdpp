@@ -41,6 +41,29 @@ Section definitions.
   Global Instance gmultiset_empty : Empty (gmultiset A) := GMultiSet ∅.
   Global Instance gmultiset_singleton : SingletonMS A (gmultiset A) := λ x,
     GMultiSet {[ x := 1%positive ]}.
+  Elpi Accumulate TC.Solver lp:{{
+    :replace "stdpp.fin_maps.map_union_with"
+    tc-stdpp.base.tc-UnionWith A MA {{@map_union_with lp:M lp:P lp:A}} :-
+      MA = app L,
+      LSplit is {std.length L} - 1,
+      std.split-at LSplit L HD' [A],
+      if (std.length HD' 1) (HD' = [M]) (M = app HD'),
+      tc-stdpp.base.tc-Merge M P.
+
+    tc-stdpp.base.tc-IntersectionWith A MA {{@map_intersection_with lp:M lp:P lp:A}} :-
+      MA = app L,
+      LSplit is {std.length L} - 1,
+      std.split-at LSplit L HD' [A],
+      if (std.length HD' 1) (HD' = [M]) (M = app HD'),
+      tc-stdpp.base.tc-Merge M P.
+
+    tc-stdpp.base.tc-DifferenceWith A MA {{@map_difference_with lp:M lp:P lp:A}} :-
+      MA = app L,
+      LSplit is {std.length L} - 1,
+      std.split-at LSplit L HD' [A],
+      if (std.length HD' 1) (HD' = [M]) (M = app HD'),
+      tc-stdpp.base.tc-Merge M P.
+  }}.
   Global Instance gmultiset_union : Union (gmultiset A) := λ X Y,
     let (X) := X in let (Y) := Y in
     GMultiSet $ union_with (λ x y, Some (x `max` y)%positive) X Y.
@@ -351,6 +374,8 @@ Tactic Notation "multiset_solver" "by" tactic3(tac) :=
                  [tac] if all else fails *)
                  solve [fast_done|lia|tac]).
 Tactic Notation "multiset_solver" := multiset_solver by eauto.
+
+Elpi Override TC TC.Solver None.
 
 Section more_lemmas.
   Context `{Countable A}.
@@ -774,3 +799,5 @@ Section more_lemmas.
     apply Hinsert, IH; multiset_solver.
   Qed.
 End more_lemmas.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.

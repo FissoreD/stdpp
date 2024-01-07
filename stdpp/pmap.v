@@ -359,6 +359,13 @@ Section Pmap_fold.
   Qed.
 End Pmap_fold.
 
+Elpi Accumulate tc.db lp:{{
+  :after "0"
+  compile-ty Ty Inst TC-of-Inst Clause :-
+    coq.reduction.eta-contract Ty Ty',
+    if (same_term Ty Ty') fail (compile-ty Ty' Inst TC-of-Inst Clause).
+}}.
+
 (** Instance of the finite map type class *)
 Global Instance Pmap_finmap : FinMap positive Pmap.
 Proof.
@@ -375,6 +382,7 @@ Qed.
 
 (** Type annotation [list (positive * A)] seems needed in Coq 8.14, not in more
 recent versions. *)
+Elpi Override TC TC.Solver None.
 Global Program Instance Pmap_countable `{Countable A} : Countable (Pmap A) := {
   encode m := encode (map_to_list m : list (positive * A));
   decode p := list_to_map <$> decode p
@@ -382,6 +390,9 @@ Global Program Instance Pmap_countable `{Countable A} : Countable (Pmap A) := {
 Next Obligation.
   intros A ?? m; simpl. rewrite decode_encode; simpl. by rewrite list_to_map_to_list.
 Qed.
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.
+
 
 (** * Finite sets *)
 (** We construct sets of [positives]s satisfying extensional equality. *)

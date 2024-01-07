@@ -200,8 +200,43 @@ Proof.
   intros p; apply eq_bool_prop_intro, (HXY p).
 Qed.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Decision T S :-
+    T' = {{@Is_true _}},
+    coq.unify-eq T T' ok,
+    tc-stdpp.base.tc-Decision T' S.
+}}.
+
 Global Instance coPset_elem_of_dec : RelDecision (∈@{coPset}).
 Proof. solve_decision. Defined.
+
+Elpi Accumulate TC.Solver lp:{{
+  :replace "stdpp.decidable.sig_eq_dec"
+  tc-stdpp.base.tc-RelDecision {{@sig lp:A lp:P}} {{@sig lp:A lp:P}} 
+    {{@eq (@sig lp:A lp:P)}} 
+    {{@sig_eq_dec lp:A lp:P (fun x => lp:(P1 x)) lp:P2}} :-
+  pi c0 \
+    decl c0 `x` A =>
+      coq.mk-app P [c0] (P' c0),
+      tc-stdpp.base.tc-ProofIrrel (P' c0) (P1 c0), 
+    tc-stdpp.base.tc-RelDecision A A {{@eq lp:A}} P2.
+
+  pred reduce-copset i:term, o:term.
+  reduce-copset T R :-
+    const CONST = {{:gref coPset}},
+    RED = coq.redflags.const CONST,
+    coq.redflags.add coq.redflags.nored [coq.redflags.delta, RED] REDLIST,
+    @redflags! REDLIST => coq.reduction.lazy.norm T T',
+    coq.reduction.eta-contract T' R.
+
+  tc-stdpp.base.tc-RelDecision A B R S :-
+    reduce-copset R R',
+    reduce-copset A A',
+    reduce-copset B B',
+    if (same_term A A', same_term B B', same_term R R') fail
+    (tc-stdpp.base.tc-RelDecision A' B' R' S).
+}}.
+
 Global Instance coPset_equiv_dec : RelDecision (≡@{coPset}).
 Proof. refine (λ X Y, cast_if (decide (X = Y))); abstract (by fold_leibniz). Defined.
 Global Instance mapset_disjoint_dec : RelDecision (##@{coPset}).
@@ -222,6 +257,12 @@ Fixpoint coPset_finite (t : coPset_raw) : bool :=
 Lemma coPset_finite_node b l r :
   coPset_finite (coPNode' b l r) = coPset_finite l && coPset_finite r.
 Proof. by destruct b, l as [[]|], r as [[]|]. Qed.
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-ElemOf A B S :-
+    C = {{coPset}}, not (B = C),
+    coq.unify-eq B C ok,
+    tc-stdpp.base.tc-ElemOf A C S.
+}}.
 Lemma coPset_finite_spec X : set_finite X ↔ coPset_finite (`X).
 Proof.
   destruct X as [t Ht].

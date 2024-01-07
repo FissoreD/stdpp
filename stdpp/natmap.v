@@ -251,10 +251,26 @@ Proof.
   induction (reverse l'); intros [|?]; simpl; auto.
 Qed.
 
+Elpi Accumulate tc.db lp:{{
+  :after "0"
+  compile-ty Ty Inst TC-of-Inst Clause :-
+    coq.reduction.eta-contract Ty Ty',
+    if (same_term Ty Ty') fail (compile-ty Ty' Inst TC-of-Inst Clause).
+}}.
+
 (** Finally, we can construct sets of [nat]s satisfying extensional equality. *)
 Notation natset := (mapset natmap).
 Global Instance natmap_dom {A} : Dom (natmap A) natset := mapset_dom.
-Global Instance: FinMapDom nat natmap natset := mapset_dom_spec.
+
+Elpi Accumulate TC.Solver lp:{{
+  :after "0" msolve L N :- !,
+    time-solve (coq.ltac.all (coq.ltac.open solve-aux) L N).
+}}.
+
+Global Instance: FinMapDom nat natmap natset (*:= mapset_dom_spec.*)
+  . eapply @mapset_dom_spec.
+  apply natmap_map.
+Defined.
 
 (* Fixpoint avoids this definition from being unfolded *)
 Definition bools_to_natset (βs : list bool) : natset :=

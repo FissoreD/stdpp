@@ -8,6 +8,8 @@ From stdpp Require Import options.
 (* Pick up extra assumptions from section parameters. *)
 Set Default Proof Using "Type*".
 
+Elpi Override TC TC.Solver None.
+
 (** Operations *)
 Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
 Global Typeclasses Opaque set_size.
@@ -728,3 +730,6 @@ Proof.
   2:{ apply NoDup_seq. }
   rewrite seq_length. done.
 Qed.
+
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.

@@ -9,6 +9,8 @@ From stdpp Require Import options.
 locally (or things moved out of sections) as no default works well enough. *)
 Unset Default Proof Using.
 
+Set TC CompilerWithPatternFragment.
+
 (* Higher precedence to make sure these instances are not used for other types
 with an [ElemOf] instance, such as lists. *)
 Global Instance set_equiv_instance `{ElemOf A C} : Equiv C | 20 := λ X Y,
@@ -158,6 +160,41 @@ Global Hint Extern 1 (SetUnfold (∀ _, _) _) =>
   class_apply set_unfold_forall : typeclass_instances.
 Global Hint Extern 0 (SetUnfold (∃ _, _) _) =>
   class_apply set_unfold_exist : typeclass_instances.
+
+Elpi TC.AddInstances 0 set_unfold_and.
+Elpi TC.AddInstances 0 set_unfold_iff.
+Elpi TC.AddInstances 0 set_unfold_impl.
+Elpi TC.AddInstances 0 set_unfold_or.
+Elpi TC.AddInstances 0 set_unfold_not.
+
+Elpi Accumulate tc.db lp:{{
+
+  % shorten tc-sets.{tc-SetUnfold}.
+  shorten tc-stdpp.sets.{tc-SetUnfold}.
+
+  :after "1"
+  tc-SetUnfold {{ forall x : lp:A, lp:(P x) }} {{ forall x : lp:A, lp:(Q x) }}
+                      {{ @set_unfold_forall lp:A lp:P' lp:Q' lp:R' }} :-
+  (pi x\ occurs x (P x)), !,
+  std.do! [
+    (@pi-decl `x` A x\ tc-SetUnfold (P x) (Q x) (R x)),
+    P' = {{ fun x : lp:A => lp:(P x) }},
+    Q' = {{ fun x : lp:A => lp:(Q x) }},
+    R' = {{ fun x : lp:A => lp:(R x) }},
+  ].
+
+  :after "0"
+  tc-SetUnfold {{ exists x : lp:A, lp:(P x) }} {{ exists x : lp:A, lp:(Q x) }}
+                      {{ @set_unfold_exist lp:A lp:P' lp:Q' lp:R' }} :-
+  (pi x\ occurs x (P x)), !,
+  std.do! [
+    (@pi-decl `x` A x\ tc-SetUnfold (P x) (Q x) (R x)),
+    P' = {{ fun x : lp:A => lp:(P x) }},
+    Q' = {{ fun x : lp:A => lp:(Q x) }},
+    R' = {{ fun x : lp:A => lp:(R x) }},
+  ].
+
+}}.
 
 Section set_unfold_simple.
   Context `{SemiSet A C}.
@@ -609,8 +646,13 @@ Section semi_set.
     (x ∈ X ↔ x ∈ Y) ↔ (x ∉ X ↔ x ∉ Y).
   Proof. destruct (decide (x ∈ X)), (decide (x ∈ Y)); tauto. Qed.
 
+  Elpi Override TC TC.Solver None.
   Section dec.
     Context `{!RelDecision (≡@{C})}.
+
+    (* Goal forall X Y, X ⊂ Y.
+      Elpi Trace Browser.
+    set_unfold. *)
 
     Lemma set_subseteq_inv X Y : X ⊆ Y → X ⊂ Y ∨ X ≡ Y.
     Proof. destruct (decide (X ≡ Y)); [by right|left;set_solver]. Qed.
@@ -708,6 +750,7 @@ Section set.
   Proof. set_solver. Qed.
   Lemma difference_disjoint X Y : X ## Y → X ∖ Y ≡ X.
   Proof. set_solver. Qed.
+  Elpi Override TC TC.Solver None.
   Lemma subset_difference_elem_of x X : x ∈ X → X ∖ {[ x ]} ⊂ X.
   Proof. set_solver. Qed.
   Lemma difference_difference_l X Y Z : (X ∖ Y) ∖ Z ≡ X ∖ (Y ∪ Z).
@@ -943,7 +986,7 @@ End fin_to_set.
 (** * Guard *)
 Global Instance set_mfail `{MonadSet M} : MFail M := λ _ _, ∅.
 Global Typeclasses Opaque set_mfail.
-
+Elpi Override TC TC.Solver None.
 Section set_monad_base.
   Context `{MonadSet M}.
 
@@ -1385,3 +1428,6 @@ Section minimal.
     intros Hmin ? y ??. trans x; [done|]. by eapply (Hmin y), transitivity.
   Qed.
 End minimal.
+
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.

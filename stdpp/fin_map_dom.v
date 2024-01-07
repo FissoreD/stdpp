@@ -7,6 +7,7 @@ From stdpp Require Import options.
 (* Pick up extra assumptions from section parameters. *)
 Set Default Proof Using "Type*".
 
+Elpi Override TC TC.Solver None.
 Class FinMapDom K M D `{∀ A, Dom (M A) D, FMap M,
     ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A, PartialAlter K A (M A),
     OMap M, Merge M, ∀ A, MapFold K A (M A), EqDecision K,
@@ -438,3 +439,5 @@ Proof. unfold_leibniz. apply dom_seq. Qed.
 Global Instance set_unfold_dom_seq `{FinMapDom nat M D} {A} start (xs : list A) i :
   SetUnfoldElemOf i (dom (map_seq start (M:=M A) xs)) (start ≤ i < start + length xs).
 Proof. constructor. by rewrite dom_seq, elem_of_set_seq. Qed.
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.

@@ -98,6 +98,16 @@ Defined.
 Global Instance gmap_dep_eq_dec {A P} :
   (∀ i, ProofIrrel (P i)) → EqDecision A → EqDecision (gmap_dep A P).
 Proof. intros. solve_decision. Defined.
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision {{@gmap_dep lp:A lp:P}} 
+    {{@gmap_dep lp:A lp:P}} 
+    {{@eq (gmap_dep lp:A lp:P)}} 
+    {{@gmap_dep_eq_dec lp:A lp:P (fun x => lp:(P1 x)) lp:P2}} :-
+        pi c0 \
+          (coq.mk-app P [c0] (PK c0), tc-stdpp.base.tc-ProofIrrel (PK c0) (P1 c0)), 
+        tc-stdpp.base.tc-RelDecision A A {{@eq lp:A}} P2
+        .
+}}.
 Global Instance gmap_eq_dec `{Countable K} {A} :
   EqDecision A → EqDecision (gmap K A).
 Proof. intros. solve_decision. Defined.
@@ -502,6 +512,7 @@ Proof.
     by apply (Hinsert _ _ (GMap mt)).
 Qed.
 
+Elpi Override TC TC.Solver None.
 Global Program Instance gmap_countable
     `{Countable K, Countable A} : Countable (gmap K A) := {
   encode m := encode (map_to_list m : list (K * A));
@@ -511,6 +522,8 @@ Next Obligation.
   intros K ?? A ?? m; simpl. rewrite decode_encode; simpl.
   by rewrite list_to_map_to_list.
 Qed.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.
 
 (** Conversion to/from [Pmap] *)
 Local Definition gmap_dep_ne_to_pmap_ne {A} : ∀ {P}, gmap_dep_ne A P → Pmap_ne A :=
@@ -557,8 +570,11 @@ Local Definition pmap_to_gmap_dep {A P}
   | PEmpty => GEmpty
   | PNodes t => GNodes (pmap_ne_to_gmap_dep_ne p t)
   end.
+Elpi Override TC TC.Solver None.
 Definition pmap_to_gmap {A} (m : Pmap A) : gmap positive A :=
   GMap $ pmap_to_gmap_dep gmap_key_encode m.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.
 
 Local Lemma lookup_pmap_ne_to_gmap_dep_ne {A P} (p : ∀ i, P i) (t : Pmap_ne A) i :
   gmap_dep_ne_lookup i (pmap_ne_to_gmap_dep_ne p t) = t !! i.
@@ -628,6 +644,7 @@ Section curry_uncurry.
    apply map_eq; intros [i j]. by rewrite lookup_gmap_uncurry, lookup_gmap_curry.
   Qed.
 
+  Elpi Override TC TC.Solver None.
   Lemma gmap_curry_non_empty (m : gmap (K1 * K2) A) i x :
     gmap_curry m !! i = Some x → x ≠ ∅.
   Proof.
@@ -635,7 +652,7 @@ Section curry_uncurry.
     eapply lookup_gmap_curry_None; intros j.
     by rewrite <-lookup_gmap_curry, Hm.
   Qed.
-
+  
   Lemma gmap_curry_uncurry_non_empty (m : gmap K1 (gmap K2 A)) :
     (∀ i x, m !! i = Some x → x ≠ ∅) →
     gmap_curry (gmap_uncurry m) = m.
@@ -658,6 +675,7 @@ Definition gset K `{Countable K} := mapset (gmap K).
 
 Section gset.
   Context `{Countable K}.
+  Elpi Override TC TC.Solver None.
   (* Lift instances of operational TCs from [mapset] and mark them [simpl never]. *)
   Global Instance gset_elem_of: ElemOf K (gset K) := _.
   Global Instance gset_empty : Empty (gset K) := _.
@@ -789,3 +807,6 @@ Section gset.
 End gset.
 
 Global Typeclasses Opaque gset.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy.
+

@@ -318,10 +318,15 @@ Proof. intros ???. by apply bv_eq. Qed.
 Definition Z_to_bv_checked (n : N) (z : Z) : option (bv n) :=
   H ← guard (BvWf n z); Some (@BV n z H).
 
+Elpi Accumulate TC.Solver lp:{{
+  :name "remove" eapply.
+}}.
 Program Definition Z_to_bv (n : N) (z : Z) : bv n :=
   @BV n (bv_wrap n z) _.
 Next Obligation. apply bv_wrap_wf. Qed.
-
+Elpi Accumulate TC.Solver lp:{{
+  :replace "remove" eapply :- fail.
+}}.
 Lemma Z_to_bv_unsigned n z:
   bv_unsigned (Z_to_bv n z) = bv_wrap n z.
 Proof. done. Qed.
@@ -476,6 +481,9 @@ Ltac bv_saturate_unsigned :=
      learn_hyp (bv_unsigned_in_range _ b)
   ] end.
 
+Elpi Accumulate TC.Solver lp:{{
+  :name "remove" :before "eapply" eapply.
+}}.
 (** * Operations on [bv n] *)
 Program Definition bv_0 (n : N) :=
   @BV n 0 _.
@@ -483,6 +491,9 @@ Next Obligation.
   intros n. apply bv_wf_in_range. split; [done| apply bv_modulus_pos].
 Qed.
 Global Instance bv_inhabited n : Inhabited (bv n) := populate (bv_0 n).
+Elpi Accumulate TC.Solver lp:{{
+  :replace "remove" fail.
+}}.
 
 Definition bv_succ {n} (x : bv n) : bv n :=
   Z_to_bv n (Z.succ (bv_unsigned x)).
@@ -502,7 +513,11 @@ Program Definition bv_divu {n} (x y : bv n) : bv n := (* SMT: bvudiv *)
   @BV n (Z.div (bv_unsigned x) (bv_unsigned y)) _.
 Next Obligation.
   intros n x y. apply bv_wf_in_range. bv_saturate.
+  Elpi Override TC TC.Solver None.
   destruct (decide (bv_unsigned y = 0)) as [->|?].
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.
+
   { rewrite Zdiv_0_r. lia. }
   split; [ apply Z.div_pos; lia |].
   apply (Z.le_lt_trans _ (bv_unsigned x)); [|lia].
@@ -512,7 +527,10 @@ Program Definition bv_modu {n} (x y : bv n) : bv n := (* SMT: bvurem *)
   @BV n (Z.modulo (bv_unsigned x) (bv_unsigned y)) _.
 Next Obligation.
   intros n x y. apply bv_wf_in_range. bv_saturate.
+  Elpi Override TC TC.Solver None.
   destruct (decide (bv_unsigned y = 0)) as [->|?].
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.
   { rewrite Zmod_0_r. lia. }
   split; [ apply Z.mod_pos; lia |].
   apply (Z.le_lt_trans _ (bv_unsigned x)); [|lia].
@@ -584,6 +602,7 @@ Definition bv_extract {n} (s l : N) (b : bv n) : bv l :=
 (* Note that we should always have n1 + n2 = n, but we use a parameter to avoid a type-level (_ + _) *)
 Program Definition bv_concat n {n1 n2} (b1 : bv n1) (b2 : bv n2) : bv n := (* SMT: concat *)
   Z_to_bv n (Z.lor (bv_unsigned b1 ≪ Z.of_N n2) (bv_unsigned b2)).
+  Elpi Override TC TC.Solver None.
 
 Definition bv_to_little_endian m n (z : Z) : list (bv n) :=
   (λ b, Z_to_bv n b) <$> Z_to_little_endian m (Z.of_N n) z.
@@ -1359,3 +1378,6 @@ Global Opaque Z_to_bv
        bv_sign_extend bv_extract bv_concat
        bv_add_Z bv_sub_Z bv_mul_Z
        bool_to_bv bv_to_bits.
+
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.

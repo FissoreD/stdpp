@@ -129,6 +129,13 @@ Proof.
   - naive_solver.
 Qed.
 
+Elpi Accumulate TC.Solver lp:{{
+  :before "solve-aux-base"
+  solve-aux (goal Ctx _ Ty Sol _ as G) GL :- 
+    coq.reduction.eta-contract Ty Ty',
+    if (same_term Ty Ty') fail (solve-aux (goal Ctx _ Ty' Sol _ as G) GL).
+}}.
+
 Local Instance mapset_dom {A} : Dom (M A) (mapset M) := λ m,
   Mapset $ fmap (λ _, ()) m.
 Local Instance mapset_dom_spec: FinMapDom K M (mapset M).

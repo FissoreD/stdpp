@@ -3880,7 +3880,7 @@ End setoid.
 
 Elpi Accumulate TC.Solver lp:{{
   tc-stdpp.base.tc-Decision X S :-
-    coq.redflags.betadeltazeta => coq.reduction.lazy.whd X Y,
+     @redflags! coq.redflags.betadeltazeta => coq.reduction.lazy.whd X Y,
     if (same_term X Y) fail (tc-stdpp.base.tc-Decision Y S).
 }}.
 

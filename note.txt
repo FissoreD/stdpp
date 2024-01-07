@@ -37,3 +37,33 @@
   finite_countable: is an Hint Immediate
   prod_finite: HO unif for Inj with instance inj2_inj_2
   need of TC.Declare in Finite: but it breaks other lemmas...
+
+2024/01/06:
+  sig_eq_dec: HO unif
+  TC.Declare for Finite
+  BUG (solved) -> in coq-eqlpi-builtin.ml, the order of impl_param for record
+                  should be reversed to keep the same implicit/explicitness as
+                  expected
+  exists_dec: HO unification
+  mapset_dom: the goal has eta expansions
+  map_filter_alt: fails even in coq while working with setoid?
+  file excluded from resolution in elpi:
+    - fin_map_dom
+    - fin_maps
+    - fin_sets
+    - sets
+  Pmap_finmap: there is an eta expansion in the instance (same for natmap_map)
+  pretty_nat_inj: need of a rule to apply compose inj on pretty
+  gmap_dep_eq_dec: need to do a mk-app
+  hashset_elem_of: msolve ir right order
+  Global Instance: FinMapDom nat natmap natset :- cant be solved with := mapset_dom_spec
+  map_union_with: HO unif
+  Is_true is alias of elem_of positive coPset coPset_elem_of
+
+2024/01/07:
+  reduce-copset: eta-contract not works?
+  in section sorted (sorting.v), A and R are not found in the current environment?
+    --> in an accumulate, the references declared in the current section are 
+        not found by coq 
+  Sorted_dec: HO unif
+  bv_divu: does not launch solve (the list of goals is empty)?

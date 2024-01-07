@@ -124,6 +124,7 @@ Proof.
 Qed.
 
 Global Instance tele_fmap {TT : tele} : FMap (tele_fun TT) := λ T U, tele_map.
+  Elpi Override TC TC.Solver None.
 
 Lemma tele_fmap_app {T U} {TT : tele} (F : T → U) (t : TT -t> T) (x : TT) :
   (F <$> t) x = F (t x).
@@ -234,3 +235,5 @@ Global Hint Extern 1 (tforall _) =>
   progress cbn [tforall tele_fold tele_bind tele_app] : typeclass_instances.
 Global Hint Extern 1 (texist _) =>
   progress cbn [texist tele_fold tele_bind tele_app] : typeclass_instances.
+Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy.

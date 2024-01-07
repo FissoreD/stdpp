@@ -1,7 +1,7 @@
 From stdpp Require Export countable vector.
 From stdpp Require Import options.
 
-(* #[mode(i, o)] TC.Declare  *)
+#[mode(o=tt, o=tt)] TC.Declare 
 Class Finite A `{EqDecision A} := {
   enum : list A;
   (* [NoDup] makes it easy to define the cardinality of the type. *)
@@ -323,14 +323,6 @@ Qed.
 Next Obligation.
   intros ?????? [a b]. apply elem_of_list_bind.
   exists a.
-  Elpi TC.Get_class_info Finite.
-  Elpi Accumulate TC.Solver lp:{{
-    :name "remove" :before "eapply" eapply :- coq.say "CIAO".
-    :before "print-goal" print-goal :- !.
-    % :after "0" msolve L _ :- coq.say "The goal list is:" L, fail.
-  }}.
-  (* Elpi Trace Browser. *)
-  (* Elpi Print TC.Solver. *)
   eauto using elem_of_enum, elem_of_list_fmap_1.
 Qed.
 Lemma prod_card `{Finite A} `{Finite B} : card (A * B) = card A * card B.
@@ -367,12 +359,30 @@ Proof.
   by rewrite app_length, fmap_length, IH.
 Qed.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision {{@sig lp:A lp:P}} 
+    {{@sig lp:A lp:P}} 
+    {{@eq (@sig lp:A lp:P)}} 
+    {{@sig_eq_dec lp:A lp:P (fun x => lp:(S1 x)) lp:S2}} :-
+      P = (fun _ _ P1),
+      pi c0 \
+      decl c0 `x` A => tc-stdpp.base.tc-ProofIrrel (P1 c0) (S1 c0), 
+        tc-stdpp.base.tc-RelDecision A A {{@eq lp:A}} S2.
+}}.
+
+
 Global Instance list_finite `{Finite A} n : Finite { l : list A | length l = n }.
 Proof.
+  Elpi Accumulate TC.Solver lp:{{
+    :name "remove" eapply :- !.
+  }}.
   refine (bijective_finite (λ v : vec A n, vec_to_list v ↾ vec_to_list_length _)).
   - abstract (by intros v1 v2 [= ?%vec_to_list_inj2]).
   - abstract (intros [l <-]; exists (list_to_vec l);
       apply (sig_eq_pi _), vec_to_list_to_vec).
+  Elpi Accumulate TC.Solver lp:{{
+    :replace "remove" eapply :- fail.
+  }}.
 Defined.
 Lemma list_card `{Finite A} n : card { l : list A | length l = n } = card A ^ n.
 Proof. unfold card; simpl. rewrite fmap_length. apply vec_card. Qed.
@@ -438,6 +448,16 @@ Section sig_finite.
   Lemma sig_card : card (sig P) = length (filter P (enum A)).
   Proof. by rewrite <-list_filter_sig_filter, fmap_length. Qed.
 End sig_finite.
+
+Elpi Accumulate TC.Solver lp:{{
+  :replace "stdpp.list.Exists_dec"
+  tc-stdpp.base.tc-Decision
+    {{@ex lp:A (fun (x : lp:A) => lp:(P x))}}
+    {{@exists_dec lp:A lp:P1 lp:P2 (fun (x: lp:A) => lp:(P x)) (fun (x: lp:A) => lp:(P3 x))}} :-
+    tc-stdpp.base.tc-RelDecision A A {{@eq lp:A}} P1, 
+    tc-stdpp.finite.tc-Finite A P1 P2, 
+    pi c0 \ tc-stdpp.base.tc-Decision (P c0) (P3 c0).
+}}.
 
 Lemma finite_pigeonhole `{Finite A} `{Finite B} (f : A → B) :
   card B < card A → ∃ x1 x2, x1 ≠ x2 ∧ f x1 = f x2.

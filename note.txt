@@ -21,7 +21,7 @@
     alias for equiv to option_forall2
 
 2024/01/05:
-  use accumulate* to remove universe variables?
+  Q: use accumulate* to remove universe variables?
   eq_pi => HO unification
   Qc_lt_pi => alias pb
   div_inj_r => compose with lambda (use of compose_inj) -> the elpi rule is in base.v
@@ -36,7 +36,7 @@
     -> same for lookup_total_seqZ_ge
   finite_countable: is an Hint Immediate
   prod_finite: HO unif for Inj with instance inj2_inj_2
-  need of TC.Declare in Finite: but it breaks other lemmas...
+  need of TC.Declare in Finite: but it breaks other lemmas... -> (solved)
 
 2024/01/06:
   sig_eq_dec: HO unif
@@ -54,16 +54,19 @@
     - sets
   Pmap_finmap: there is an eta expansion in the instance (same for natmap_map)
   pretty_nat_inj: need of a rule to apply compose inj on pretty
-  gmap_dep_eq_dec: need to do a mk-app
+  gmap_dep_eq_dec: HO unif (need to do a mk-app)
   hashset_elem_of: msolve ir right order
   Global Instance: FinMapDom nat natmap natset :- cant be solved with := mapset_dom_spec
   map_union_with: HO unif
   Is_true is alias of elem_of positive coPset coPset_elem_of
 
 2024/01/07:
-  reduce-copset: eta-contract not works?
+  reduce-copset: eta-contract not works? (It's OK)
   in section sorted (sorting.v), A and R are not found in the current environment?
     --> in an accumulate, the references declared in the current section are 
-        not found by coq 
+        not found by coq (file test.v)
   Sorted_dec: HO unif
   bv_divu: does not launch solve (the list of goals is empty)?
+
+2024/01/09:
+  countable_sig loops with HO unif (current coq-elpi version: https://github.com/FissoreD/coq-elpi/commit/24336f917e90a0d48b94134dfb27c80c584be916)

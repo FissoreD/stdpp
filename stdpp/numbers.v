@@ -41,7 +41,7 @@ Global Typeclasses Opaque lt.
 
 Elpi Accumulate TC.Solver lp:{{
   tc-stdpp.base.tc-ProofIrrel X S :-
-    Y = {{Z.lt lp:A1 lp:A0}},
+    Y = {{Z.lt _ _}},
     coq.unify-eq X Y ok,
     tc-stdpp.base.tc-ProofIrrel Y S.
 }}.
@@ -1228,7 +1228,7 @@ Module Qp.
 
   Elpi Accumulate TC.Solver lp:{{
     tc-stdpp.base.tc-Inj A B R1 R3 F S :- 
-      F = (fun _ _ C), !,
+      F = (fun _ _ _), !,
       G = {{ compose _ _}},
       coq.unify-eq G F ok,
       tc-stdpp.base.tc-Inj A B R1 R3 G S.
@@ -1500,7 +1500,7 @@ Module Qp.
   Elpi Accumulate TC.Solver lp:{{
     :after "0"
     % mode for Decision...
-    tc-stdpp.base.tc-Decision L S :-
+    tc-stdpp.base.tc-Decision L _ :-
       var L, !, fail.
 
     :name "remove" eapply :- !.

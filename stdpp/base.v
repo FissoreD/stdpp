@@ -384,23 +384,6 @@ an explicit class instead of a notation for two reasons:
   Using the [RelDecision], the [f] is hidden under a lambda, which prevents
   unnecessary evaluation. *)
 
-(* Elpi Accumulate TC.Compiler lp:{{
-  :after "0"
-  main [str Inst, str Cl, str Locality, int Prio] :- !,
-    coq.locate Cl GRCl,
-    coq.locate Inst GRInst,
-    coq.env.typeof GRInst T,
-    coq.say GRInst T,
-    add-inst GRInst GRCl Locality Prio.
-
-  main [str Cl] :- !,
-    coq.locate Cl GR,
-    add-class-gr classic GR.
-
-  main A :- coq.error "Fail in TC.Compiler: not a valid input entry" A.
-}}.
-Elpi Trace Browser. *)
-
 Class RelDecision {A B} (R : A → B → Prop) :=
   decide_rel x y :> Decision (R x y).
 
@@ -1654,6 +1637,9 @@ Class MonadSet M `{∀ A, ElemOf A (M A),
     x ∈ mjoin X ↔ ∃ Y : M A, x ∈ Y ∧ Y ∈ X
 }.
 
+Elpi Print TC.Solver.
+Elpi Typecheck TC.Solver.
+
 (** The [Infinite A] class axiomatizes types [A] with infinitely many elements.
 It contains a function [fresh : list A → A] that given a list [xs] gives an
 element [fresh xs ∉ xs].
@@ -1689,29 +1675,11 @@ Notation "½" := half (format "½") : stdpp_scope.
 Notation "½*" := (fmap (M:=list) half) : stdpp_scope.
 
 Elpi Accumulate TC.Solver lp:{{
-  :replace "stdpp.base.decide_rel"
-  tc-stdpp.base.tc-Decision R {{@decide_rel lp:A lp:B lp:HD lp:S lp:X lp:Y}} :-
-    R = app L,
-    LSplit is {std.length L} - 2,
-    std.split-at LSplit L HD' [X, Y],
-    if (std.length HD' 1) (HD' = [HD]) (HD = app HD'),
-    tc-stdpp.base.tc-RelDecision A B HD S.
-}}.
-
-Elpi Accumulate TC.Solver lp:{{
-  :replace "stdpp.base.partial_order_pre"
-  tc-Coq.Classes.RelationClasses.tc-PreOrder T R (app [global {{:gref partial_order_pre}}, T, R, S]) :-
-    tc-stdpp.base.tc-PartialOrder T R S.
-
-  :replace "stdpp.base.total_order_partial"
-  tc-stdpp.base.tc-PartialOrder A R {{total_order_partial lp:A lp:R lp:S}} :-
-    tc-stdpp.base.tc-TotalOrder A R S.
-}}.
-
-Elpi Accumulate TC.Solver lp:{{
   tc-stdpp.base.tc-Inj A B R1 R3 F S :- 
-    F = (fun _ _ C), !,
+    F = (fun _ _ _), !,
     G = {{ compose _ _}},
     coq.unify-eq G F ok,
     tc-stdpp.base.tc-Inj A B R1 R3 G S.
 }}.
+Elpi Print TC.Solver.
+Elpi Typecheck TC.Solver.

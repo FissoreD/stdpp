@@ -373,16 +373,10 @@ Elpi Accumulate TC.Solver lp:{{
 
 Global Instance list_finite `{Finite A} n : Finite { l : list A | length l = n }.
 Proof.
-  Elpi Accumulate TC.Solver lp:{{
-    :name "remove" eapply :- !.
-  }}.
   refine (bijective_finite (λ v : vec A n, vec_to_list v ↾ vec_to_list_length _)).
   - abstract (by intros v1 v2 [= ?%vec_to_list_inj2]).
   - abstract (intros [l <-]; exists (list_to_vec l);
       apply (sig_eq_pi _), vec_to_list_to_vec).
-  Elpi Accumulate TC.Solver lp:{{
-    :replace "remove" eapply :- fail.
-  }}.
 Defined.
 Lemma list_card `{Finite A} n : card { l : list A | length l = n } = card A ^ n.
 Proof. unfold card; simpl. rewrite fmap_length. apply vec_card. Qed.

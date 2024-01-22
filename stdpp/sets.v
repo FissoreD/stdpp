@@ -9,7 +9,7 @@ From stdpp Require Import options.
 locally (or things moved out of sections) as no default works well enough. *)
 Unset Default Proof Using.
 
-Set TC CompilerWithPatternFragment.
+(* Set TC CompilerWithPatternFragment. *)
 
 (* Higher precedence to make sure these instances are not used for other types
 with an [ElemOf] instance, such as lists. *)
@@ -20,6 +20,10 @@ Global Instance set_subseteq_instance `{ElemOf A C} : SubsetEq C | 20 := λ X Y,
 Global Instance set_disjoint_instance `{ElemOf A C} : Disjoint C | 20 := λ X Y,
   ∀ x, x ∈ X → x ∈ Y → False.
 Global Typeclasses Opaque set_equiv_instance set_subseteq_instance set_disjoint_instance.
+
+Elpi Query TC.Solver lp:{{
+  coq.option.add ["NO_SET_UNFOLD_DEFAULT"] (coq.option.bool ff) ff.
+}}.
 
 (** * Setoids *)
 Section setoids_simple.
@@ -120,6 +124,14 @@ Class SetUnfoldSimpl (P Q : Prop) := { set_unfold_simpl : SetUnfold P Q }.
 Global Hint Extern 0 (SetUnfoldSimpl _ _) => csimpl; constructor : typeclass_instances.
 
 Global Instance set_unfold_default P : SetUnfold P P | 1000. done. Qed.
+
+Elpi Accumulate TC.Solver lp:{{
+  :before "stdpp.sets.set_unfold_default"
+  tc-stdpp.sets.tc-SetUnfold A B _ :-
+    coq.option.get ["NO_SET_UNFOLD_DEFAULT"] (coq.option.bool tt),
+    coq.error "Not apply setUnfoldDefault" A B.
+}}.
+
 Definition set_unfold_1 `{SetUnfold P Q} : P → Q := proj1 (set_unfold P Q).
 Definition set_unfold_2 `{SetUnfold P Q} : Q → P := proj2 (set_unfold P Q).
 
@@ -405,10 +417,32 @@ Section semi_set.
   (** Equality *)
   Lemma set_equiv X Y : X ≡ Y ↔ ∀ x, x ∈ X ↔ x ∈ Y.
   Proof. set_solver. Qed.
+
+  Lemma e: forall X Y, (exists (x: Prop), SetUnfold (X ≡ Y) x). eexists. apply _. Defined.
+
+  Check eq_refl : e = (fun _ _ => ex_intro _ _ (set_unfold_equiv _ _ _ _ _ _)).
+
   Lemma set_equiv_subseteq X Y : X ≡ Y ↔ X ⊆ Y ∧ Y ⊆ X.
   Proof. set_solver. Qed.
   Global Instance singleton_equiv_inj : Inj (=) (≡@{C}) singleton.
   Proof. unfold Inj. set_solver. Qed.
+
+  Section test.
+    Local Lemma xx x y `{!LeibnizEquiv C}: (exists q, SetUnfold (@eq C (@singleton A C H1 x) (@singleton A C H1 y)) q).
+      eexists.
+      apply _.
+    Defined.
+    Check eq_refl : xx = λ x y (LeibnizEquiv0 : LeibnizEquiv C),
+      ex_intro _ _
+        (set_unfold_equiv_L _ _ _ _
+          (λ x0, set_unfold_singleton x0 x) (λ x0, set_unfold_singleton x0 y)).
+    Local Lemma yy x y `{!LeibnizEquiv C}: (exists q, SetUnfold (@eq C (@singleton A C H1 x) (@singleton A C H1 y)) q).
+      eexists.
+      apply set_unfold_equiv_L; intro; apply _.
+    Defined.
+    Check eq_refl : xx = yy.
+  End test.
+
   Global Instance singleton_inj `{!LeibnizEquiv C} : Inj (=) (=@{C}) singleton.
   Proof. unfold Inj. set_solver. Qed.
 
@@ -646,13 +680,19 @@ Section semi_set.
     (x ∈ X ↔ x ∈ Y) ↔ (x ∉ X ↔ x ∉ Y).
   Proof. destruct (decide (x ∈ X)), (decide (x ∈ Y)); tauto. Qed.
 
-  Elpi Override TC TC.Solver None.
+
   Section dec.
     Context `{!RelDecision (≡@{C})}.
+      
 
-    (* Goal forall X Y, X ⊂ Y.
-      Elpi Trace Browser.
-    set_unfold. *)
+    Section test.
+      Lemma xx1: forall X Y, exists Q, SetUnfold (@strict C (@subseteq C (@set_subseteq_instance A C H)) X Y) Q.
+        eexists.
+        (* Check (forall P Q, (∀ x : A, P x → Q x) ∧ ¬ ∀ x : A, Q x → P x). *)
+        apply _.
+      Defined.
+      Check eq_refl : xx1 = (fun _ _ => ex_intro _ _ (set_unfold_subset _ _ _ _ _ _)). 
+    End test.
 
     Lemma set_subseteq_inv X Y : X ⊆ Y → X ⊂ Y ∨ X ≡ Y.
     Proof. destruct (decide (X ≡ Y)); [by right|left;set_solver]. Qed.
@@ -750,9 +790,16 @@ Section set.
   Proof. set_solver. Qed.
   Lemma difference_disjoint X Y : X ## Y → X ∖ Y ≡ X.
   Proof. set_solver. Qed.
-  Elpi Override TC TC.Solver None.
   Lemma subset_difference_elem_of x X : x ∈ X → X ∖ {[ x ]} ⊂ X.
-  Proof. set_solver. Qed.
+  Proof.
+    assert (exists Q, (SetUnfold
+	              (@strict C (@subseteq C (@set_subseteq_instance A C H))
+                     (@difference C H4 X (@singleton A C H1 x)) X) 
+                  Q)).
+    {
+      eexists.  
+       apply _. }
+  set_solver. Qed.
   Lemma difference_difference_l X Y Z : (X ∖ Y) ∖ Z ≡ X ∖ (Y ∪ Z).
   Proof. set_solver. Qed.
 
@@ -769,6 +816,21 @@ Section set.
   Proof. set_solver. Qed.
   Lemma subseteq_difference_l X1 X2 Y : X1 ⊆ Y → X1 ∖ X2 ⊆ Y.
   Proof. set_solver. Qed.
+
+  Section test.
+    Lemma bo X Y: (exists q, (SetUnfold
+	              (iff (@disjoint C (@set_disjoint_instance A C H) X Y)
+                     (@equiv C (@set_equiv_instance A C H)
+                        (@intersection C H3 X Y) (@empty C H0))) 
+                  q)).
+      eexists.
+      apply _.
+      Show Proof.
+    Defined.
+    Check eq_refl : bo = (fun _ _ => ex_intro _ _ (set_unfold_iff _ _ _ _ 
+      (set_unfold_disjoint _ _ _ _ _ _) (set_unfold_equiv_empty_r _ _ _))).
+  End test.
+  
 
   (** Disjointness *)
   Lemma disjoint_intersection X Y : X ## Y ↔ X ∩ Y ≡ ∅.
@@ -986,10 +1048,14 @@ End fin_to_set.
 (** * Guard *)
 Global Instance set_mfail `{MonadSet M} : MFail M := λ _ _, ∅.
 Global Typeclasses Opaque set_mfail.
-Elpi Override TC TC.Solver None.
 Section set_monad_base.
   Context `{MonadSet M}.
 
+    Elpi Accumulate TC.Solver lp:{{
+      :after "0"
+      msolve L N :- !,
+        time-solve (coq.ltac.all (coq.ltac.open solve-aux) L N).
+    }}.
   Lemma elem_of_mfail {A} x : x ∈@{M A} mfail ↔ False.
   Proof. unfold mfail, set_mfail. by rewrite elem_of_empty. Qed.
 
@@ -1018,9 +1084,28 @@ Section set_monad_base.
   Global Instance set_unfold_guard `{Decision P} {A} (x : A) (X : M A) Q :
     SetUnfoldElemOf x X Q → SetUnfoldElemOf x (guard P;; X) (P ∧ Q).
   Proof. constructor. by rewrite elem_of_guard, (set_unfold (x ∈ X) Q). Qed.
+
+  Section test.
+    Context {A B} (f : A → M B) (X : M A).
+    Lemma bb : exists P, forall x, @SetUnfoldElemOf B (M B) (H B) x (@mbind M MBind0 A B f X) (P x).
+    Proof.
+      eexists; intros.
+      apply _.
+    Defined.
+    Check eq_refl : bb = (ex_intro 
+                        (λ P : B → Prop, ∀ x : B, SetUnfoldElemOf x (X ≫= f) (P x)) _ 
+                        (λ x : B, set_unfold_bind _ _ _ _ _ _ _)).
+  End test. 
+
   Lemma bind_empty {A B} (f : A → M B) X :
     X ≫= f ≡ ∅ ↔ X ≡ ∅ ∨ ∀ x, x ∈ X → f x ≡ ∅.
-  Proof. set_solver. Qed.
+  Proof. 
+    assert (exists P, forall x : B,
+	     @SetUnfoldElemOf B (M B) (H B) x (@mbind M MBind0 A B f X) (P x)).
+    - eexists; intros. 
+    Set NO_SET_UNFOLD_DEFAULT.
+    apply _. 
+  - set_solver. Qed.
 End set_monad_base.
 
 
@@ -1048,6 +1133,24 @@ Section quantifiers.
     intros HX HP; constructor. unfold set_Exists. f_equiv; intros x.
     by rewrite (set_unfold (x ∈ X) _), (set_unfold (P x) _).
   Qed.
+
+  Unset NO_SET_UNFOLD_DEFAULT.
+
+  Section x.
+    Local Lemma x: set_Forall P (∅ : C). set_solver. Defined.
+    Check eq_refl : x =
+     (@set_unfold_2 (@set_Forall A C H P (@empty C H0))
+        (forall (x : A) (_ : False), P x)
+        (set_unfold_set_Forall (@empty C H0) (fun _ : A => False) P
+          (@set_unfold_empty A C H H0 H1 H2 H3)
+            (fun x : A => set_unfold_default (P x)))
+        (let H3 : @SemiSet A C H H0 H1 H2 :=
+            @set_unfold_1 (@SemiSet A C H H0 H1 H2) (@SemiSet A C H H0 H1 H2)
+              (set_unfold_default (@SemiSet A C H H0 H1 H2)) H3 in
+          (fun (_ : @SemiSet A C H H0 H1 H2) (x : A) (H : False) =>
+          match H return (P x) with
+          end : P x) H3)).
+  End x.
 
   Lemma set_Forall_empty : set_Forall P (∅ : C).
   Proof. set_solver. Qed.
@@ -1097,12 +1200,21 @@ Section set_monad.
   Global Instance set_fmap_mono {A B} :
     Proper (pointwise_relation _ (=) ==> (⊆) ==> (⊆)) (@fmap M _ A B).
   Proof. intros f g ? X Y ?; set_solver by eauto. Qed.
+
   Global Instance set_bind_mono {A B} :
     Proper (pointwise_relation _ (⊆) ==> (⊆) ==> (⊆)) (@mbind M _ A B).
   Proof. unfold respectful, pointwise_relation; intros f g Hfg X Y ?. set_solver. Qed.
   Global Instance set_join_mono {A} :
     Proper ((⊆) ==> (⊆)) (@mjoin M _ A).
-  Proof. intros X Y ?; set_solver. Qed.
+  Proof. intros X Y ?. 
+    (* set_unfold_join *)
+    (* tc-stdpp.sets.tc-SetUnfoldElemOf c0 (app [global (const «M»), c0]) 
+ (app [global (const «H»), c0]) c4 
+ (app
+   [global (const «mjoin»), global (const «M»), 
+    global (const «MJoin0»), c0, c1]) (X1405 c0 c1 c2 c3 c4) (X1385^4 c4)
+ *)
+  set_solver. Qed.
 
   Lemma set_bind_singleton {A B} (f : A → M B) x : {[ x ]} ≫= f ≡ f x.
   Proof. set_solver. Qed.
@@ -1120,7 +1232,6 @@ Section set_monad.
   Lemma elem_of_fmap_2_alt {A B} (f : A → B) (X : M A) (x : A) (y : B) :
     x ∈ X → y = f x → y ∈ f <$> X.
   Proof. set_solver. Qed.
-
   Lemma elem_of_mapM {A B} (f : A → M B) l k :
     l ∈ mapM f k ↔ Forall2 (λ x y, x ∈ f y) l k.
   Proof.
@@ -1428,6 +1539,3 @@ Section minimal.
     intros Hmin ? y ??. trans x; [done|]. by eapply (Hmin y), transitivity.
   Qed.
 End minimal.
-
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy.

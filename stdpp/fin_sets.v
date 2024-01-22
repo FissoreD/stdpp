@@ -8,7 +8,7 @@ From stdpp Require Import options.
 (* Pick up extra assumptions from section parameters. *)
 Set Default Proof Using "Type*".
 
-Elpi Override TC TC.Solver None.
+(* Elpi Override TC TC.Solver None. *)
 
 (** Operations *)
 Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
@@ -117,14 +117,98 @@ Proof.
   apply Permutation_singleton_r. by rewrite <-(right_id ∅ (∪) {[x]}),
     elements_union_singleton, elements_empty by set_solver.
 Qed.
+Lemma xx X Y:
+  (exists q, SetUnfold
+	              (NoDup (elements X)
+                   ∧ (∀ x : A, x ∈ elements X → x ∉ elements Y)
+                     ∧ NoDup (elements Y)) q).
+                      (* Elpi Override TC TC.Solver None. *)
+  intros.
+  eexists.
+  apply _.
+Defined.
+
+Check eq_refl : (λ X Y,
+   ex_intro
+	 (λ q : Prop,
+        SetUnfold
+          (NoDup (elements X)
+           ∧ (∀ x : A, x ∈ elements X → x ∉ elements Y) ∧ NoDup (elements Y))
+          q)
+     (NoDup (elements X)
+      ∧ (∀ x : A, (λ x0 : A, x0 ∈ X → x0 ∉ Y) x) ∧ NoDup (elements Y))
+     (set_unfold_and (NoDup (elements X))
+        ((∀ x : A, x ∈ elements X → x ∉ elements Y) ∧ NoDup (elements Y))
+        (NoDup (elements X))
+        ((∀ x : A, (λ x0 : A, x0 ∈ X → x0 ∉ Y) x) ∧ NoDup (elements Y))
+        (set_unfold_default (NoDup (elements X)))
+        (set_unfold_and (∀ x : A, x ∈ elements X → x ∉ elements Y)
+           (NoDup (elements Y)) (∀ x : A, (λ x0 : A, x0 ∈ X → x0 ∉ Y) x)
+           (NoDup (elements Y))
+           (set_unfold_forall (λ x : A, x ∈ elements X → x ∉ elements Y)
+              (λ x : A, x ∈ X → x ∉ Y)
+              (λ x : A,
+                 set_unfold_impl (x ∈ elements X) 
+                   (x ∉ elements Y) (x ∈ X) (x ∉ Y)
+                   (set_unfold_elem_of_set_unfold x 
+                      (elements X) (x ∈ X)
+                      (set_unfold_elements X x (x ∈ X)
+                         (set_unfold_elem_of_default x X)))
+                   (set_unfold_not (x ∈ elements Y) 
+                      (x ∈ Y)
+                      (set_unfold_elem_of_set_unfold x 
+                         (elements Y) (x ∈ Y)
+                         (set_unfold_elements Y x 
+                            (x ∈ Y) (set_unfold_elem_of_default x Y))))))
+           (set_unfold_default (NoDup (elements Y)))))) =xx.
+
 Lemma elements_disj_union (X Y : C) :
   X ## Y → elements (X ∪ Y) ≡ₚ elements X ++ elements Y.
 Proof.
   intros HXY. apply NoDup_Permutation.
   - apply NoDup_elements.
-  - apply NoDup_app. set_solver by eauto using NoDup_elements.
+  - apply NoDup_app.
+    Elpi Accumulate TC.Solver lp:{{
+    % :after "0" solve-aux (goal Ctx _ Ty _ _) _ :-
+    %   coq.say "Ctx" Ctx "Ty" Ty, fail.
+    :before "print-solution" print-solution :- !.
+    :before "print-goal" print-goal :- !.
+    % :after "0" msolve L _ :- coq.say "The goal list is:" L, fail.
+  }}.
+  (* 
+  app
+ [global (indt «FinSet»), X0 c1 (global (const «H6»)) c2, 
+  X1 c1 (global (const «H6»)) c2, X2 c1 (global (const «H6»)) c2, 
+  X3 c1 (global (const «H6»)) c2, X4 c1 (global (const «H6»)) c2, 
+  X5 c1 (global (const «H6»)) c2, X6 c1 (global (const «H6»)) c2, 
+  X7 c1 (global (const «H6»)) c2, X8 c1 (global (const «H6»)) c2, 
+  X9 c1 (global (const «H6»)) c2] >>>
+  *)
+    (* Elpi Override TC TC.Solver None.
+Set Elpi Typeclasses Debug.
+Set Printing All. *)
+Print HintDb typeclass_instances.
+  set_solver by eauto using NoDup_elements.
   - set_solver.
+  (* The goal is <<< 
+app
+ [global (indt «SetUnfold»), 
+  app
+   [global (indt «FinSet»), global (const «A»), global (const «C»), 
+	global (const «H»), global (const «H0»), global (const «H1»), 
+    global (const «H2»), global (const «H3»), global (const «H4»), 
+    global (const «H5»), global (const «EqDecision0»)], X0 c0 c1] >>>
+The proof is <<< 
+app
+ [global (const «set_unfold_default»), 
+  app
+   [global (indt «FinSet»), global (const «A»), global (const «C»), 
+	global (const «H»), global (const «H0»), global (const «H1»), 
+    global (const «H2»), global (const «H3»), global (const «H4»), 
+    global (const «H5»), global (const «EqDecision0»)]] >>> *)
 Qed.
+(* 9: looking for (@FinSet ?A ?C ?H ?H0 ?H1 ?H2 ?H3 ?H4 ?H5 ?EqDecision0) with backtracking
+ *)
 Lemma elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.
 Proof.
   intros; apply NoDup_submseteq; eauto using NoDup_elements.

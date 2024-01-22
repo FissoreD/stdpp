@@ -1502,8 +1502,6 @@ Module Qp.
     % mode for Decision...
     tc-stdpp.base.tc-Decision L _ :-
       var L, !, fail.
-
-    :name "remove" eapply :- !.
   }}.
 
   Global Instance min_assoc : Assoc (=) min.
@@ -1513,10 +1511,6 @@ Module Qp.
     - by rewrite !decide_True by (by etrans).
     - by rewrite decide_False by (apply lt_nge; etrans; by apply lt_nge).
   Qed.
-
-  Elpi Accumulate TC.Solver lp:{{
-    :replace "remove" eapply :- fail.
-  }}.
 
   Global Instance min_comm : Comm (=) min.
   Proof.

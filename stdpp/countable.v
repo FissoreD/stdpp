@@ -4,6 +4,11 @@ From stdpp Require Import well_founded.
 From stdpp Require Import options.
 Local Open Scope positive.
 
+Elpi Accumulate TC.Solver lp:{{
+  :after "0"
+  ho-link X _ Y :- var X, var Y.
+}}.
+
 (** Note that [Countable A] gives rise to [EqDecision A] by checking equality of
 the results of [encode]. This instance of [EqDecision A] is very inefficient, so
 the native decider is typically preferred for actual computation. To avoid

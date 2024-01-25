@@ -1,23 +1,13 @@
 From stdpp Require Export countable vector.
 From stdpp Require Import options.
 
-#[mode(o=tt, o=tt)] TC.Declare 
+Elpi TC.Pending_mode - +.
 Class Finite A `{EqDecision A} := {
   enum : list A;
   (* [NoDup] makes it easy to define the cardinality of the type. *)
   NoDup_enum : NoDup enum;
   elem_of_enum x : x ∈ enum
 }.
-
-Elpi Accumulate TC.Solver lp:{{
-  tc-stdpp.base.tc-Inj B C R2 R3 F
-    {{@inj2_inj_2 lp:A lp:B lp:C lp:R1 lp:R2 lp:R3 lp:HD lp:S lp:X}} :-
-        F = app L,
-        LSplit is {std.length L} - 1,
-        std.split-at LSplit L HD' [X],
-        if (std.length HD' 1) (HD' = [HD]) (HD = app HD'),
-        tc-stdpp.base.tc-Inj2 A B C R1 R2 R3 HD S.
-}}.
 
 Global Hint Mode Finite ! - : typeclass_instances.
 Global Arguments enum : clear implicits.

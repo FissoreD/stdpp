@@ -456,7 +456,6 @@ Proof.
   intros ?; constructor. by rewrite elem_of_filter, (set_unfold_elem_of x X Q).
 Qed.
 
-
 Section filter.
   Context (P : A → Prop) `{!∀ x, Decision (P x)}.
 
@@ -476,25 +475,112 @@ Section filter.
   Proof. set_solver. Qed.
   Lemma disjoint_filter_complement X : filter P X ## filter (λ x, ¬P x) X.
   Proof. set_solver. Qed.
-  Goal forall x X, exists QQ, (SetUnfoldElemOf x (filter P X) QQ).
+  (* Goal forall x X, (exists Q, SetUnfold
+	              (@elem_of A C H x
+                     (@union C H2
+                        (@filter A C (@set_filter A C H5 H0 H1 H2) P
+                           (fun x : A => H7 x) X)
+                        (@filter A C (@set_filter A C H5 H0 H1 H2)
+                           (fun x : A => not (P x))
+                           (fun x : A => @not_dec (P x) (H7 x)) X))) 
+                  Q).
       eexists.
-        Elpi Accumulate TC.Solver lp:{{
-          :before "default-declare-evar"
-          evar X Ty T :-
-            (not (is-instance-term Ty)),
-            % coq.say "AA" Time ":" Ty,
-            % (coq.say "BB" Time ":" {coq.term->string Ty}), 
-            coq.typecheck-ty Ty _ ok, !, X = T.
-        }}.
-        Set Typeclass Resolution For Conversion.
-        Time apply _.
-        
-        (* apply set_unfold_filter. *)
-        (* apply set_unfold_elem_of_default. *)
-  Qed.
-
+      apply set_unfold_elem_of_set_unfold.
+      eapply @set_unfold_union.
+      - apply _.
+      - apply _. *)
   Lemma filter_union_complement X : filter P X ∪ filter (λ x, ¬P x) X ≡ X.
-  Proof. intros x. destruct (decide (P x)); set_solver. Qed.
+  Proof. intros x. destruct (decide (P x)).
+  
+    + 
+      (* Elpi Override TC TC.Solver None.
+      Set Elpi Typeclasses Debug.
+      assert (exists Q, SetUnfold (FinSet A C) Q).
+                  - eexists. apply _. *)
+      Elpi Accumulate TC.Solver lp:{{
+    % :after "0" solve-aux (goal Ctx _ Ty _ _) _ :-
+    %   coq.say "Ctx" Ctx "Ty" Ty, fail.
+    :before "print-solution" print-solution :- !.
+    :before "print-goal" print-goal :- !.
+    % :after "0" msolve L _ :- coq.say "The goal list is:" L, fail.
+  }}.
+  (* Elpi Override TC TC.Solver None. *)
+      Set Elpi Typeclasses Debug.
+      split; intros.
+  - 
+    Elpi Override TC TC.Solver None.
+      Set Elpi Typeclasses Debug.
+        Elpi Override TC TC.Solver All.
+  Elpi Accumulate TC.Solver lp:{{
+    % :after "0" solve-aux (goal Ctx _ Ty _ _) _ :-
+    %   coq.say "Ctx" Ctx "Ty" Ty, fail.
+    :before "print-solution" print-solution :- !.
+    :before "print-goal" print-goal :- !.
+    % :after "0" msolve L _ :- coq.say "The goal list is:" L, fail.
+    % tc-stdpp.sets.tc-SetUnfold A B S :-
+    %   coq.say A B S, coq.error "STOP".
+  }}.
+    
+    (* clear H8. *)
+    (* Elpi Override TC TC.Solver None. *)
+    assert (exists Q, SetUnfold
+	              (@elem_of A C H x
+                     (@union C H2
+                        (@filter A C (@set_filter A C H5 H0 H1 H2) P
+                           (fun x : A => H7 x) X)
+                        (@filter A C (@set_filter A C H5 H0 H1 H2)
+                           (fun x : A => not (P x))
+                           (fun x : A => @not_dec (P x) (H7 x)) X))) 
+                  Q).
+        -- eexists.
+          clear H8 H6 p H3 H4 EqDecision0. 
+          apply set_unfold_elem_of_set_unfold.
+          (* apply set_unfold_union. *)
+          eapply @set_unfold_union.
+          --- apply _.
+          ---
+          Set Printing Existential Instances. 
+          (* Elpi Trace. *)
+          (* Elpi Override TC TC.Solver None. *)
+          (* apply set_unfold_elem_of_default. *)
+          apply _.
+          apply _.
+          filterbase
+          SetUnfoldElemOf
+
+  set_solver. 
+  
+  
+  apply _.
+
+    elem_of
+1. set_unfold_elem_of_set_unfold
+2. set_unfold_union
+  1. fin_set_set -> H6
+  2. set_unfold_filter -> set_unfold_elem_of_default
+  3. set_unfold_filter -> set_unfold_elem_of_default
+(* 
+
+∀ {A C : Type} {H : ElemOf A C} {H0 : Empty C} 
+  {H1 : Singleton A C} {H2 : Union C} {_ : @SemiSet A C H H0 H1 H2} 
+  (x : A) (X Y : C) (P Q : Prop) (_ : @SetUnfoldElemOf A C H x X P)
+  (_ : @SetUnfoldElemOf A C H x Y Q),
+@SetUnfoldElemOf A C H x (@union C H2 X Y) (or P Q)
+*)
+  (* Elpi Trace. *)
+  set_solver. apply _.
+    (* Elpi Trace Browser. *)
+    (* SetUnfold
+	              (iff
+                     (@elem_of A C H x
+                        (@union C H2
+                           (@filter A C (@set_filter A C H5 H0 H1 H2) P
+                              (fun x : A => H7 x) X)
+                           (@filter A C (@set_filter A C H5 H0 H1 H2)
+                              (fun x : A => not (P x))
+                              (fun x : A => @not_dec (P x) (H7 x)) X)))
+                     (@elem_of A C H x X)) ?Q *)
+    set_solver. Qed.
 
   Section leibniz_equiv.
     Context `{!LeibnizEquiv C}.
@@ -658,87 +744,7 @@ Section set_omap.
 
   Lemma set_omap_singleton f x :
     set_omap f {[ x ]} ≡ match f x with Some y => {[ y ]} | None => ∅ end.
-  Proof.
-    Elpi Accumulate TC.Solver lp:{{
-    % :after "0" solve-aux (goal Ctx _ Ty _ _) _ :-
-    %   coq.say "Ctx" Ctx "Ty" Ty, fail.
-    :before "print-solution" print-solution :- !.
-    :before "print-goal" print-goal :- !.
-    :before "solve-aux-base"
-    solve-aux (goal Ctx _ TyRaw Sol _ as G) GL :- std.do![
-      var Sol,
-      build-hypotheses Ctx Clauses,
-      normalize-ty TyRaw Ty,
-      if-true (print-goal) (coq.say "The goal is <<<" {coq.term->string Ty} ">>>"),
-      Clauses => (
-        coq.say "Before search",
-        tc-recursive-search Ty Proof,
-          coq.say "BEFORE REFINE",
-          if-true (print-solution) (coq.say "The proof is <<<" {coq.term->string Proof} ">>>"),
-          if (is-option-active oTC-ignore-eta-reduction) 
-            (Proof' = Proof) (coq.reduction.eta-contract Proof Proof'),
-          std.time (refine Proof' G GL) Refine-Time, 
-          coq.say "OK REFINE",
-          if-true (is-option-active oTC-time-refine) 
-            (coq.say "[TC] Refine time is:" Refine-Time);
-          coq.error "illtyped solution:" {coq.term->string Proof}
-      )].
-    :before "solve-aux-base"
-    solve-aux (goal _ _ TyRaw _ _) _ :-
-      coq.say "MM",
-      coq.ltac.fail _ "[TC] fail to solve" RawTy.
-
-    % :after "0" msolve L _ :- coq.say "The goal list is:" L, fail.
-  }}.
-  (* assert (exists Q, SetUnfold (FinSet A C) Q).
-  -
-      eexists.
-      apply _.
-      (* Elpi Override TC TC.Solver None. *)
-      (* Set Elpi Typeclasses Debug. *)
-      apply set_unfold_default. *)
-  (* Elpi Trace Browser. *)
-
-        (* Elpi Bound Steps 10000. *)
-        (* Set Default Timeout 1. *)
-        (* apply (set_unfold_omap). *)
-          (* Elpi Override TC TC.Solver None. *)
-          (* Set Elpi Typeclasses Debug. *)
-          intros ?.
-          set_solver.
-          apply set_unfold_2.
-          split; intros.
-          -
-          admit.
-          - eexists. apply _. 
-  set_solver.
-  Show Proof.
-  (* (λ f x,
-   set_unfold_2
-	 (let H11 : SemiSet B D := set_unfold_1 H11 in
-      (let H6 : FinSet A C := set_unfold_1 H6 in
-       (λ (_ : FinSet A C) (_ : SemiSet B D) (x0 : B),
-          conj
-            (λ H12 : ∃ x1, Some x0 = f x1 ∧ x1 = x,
-               match H12 with
-               | ex_intro _ x1 x2 =>
-                   (λ (H13 : A) (H14 : Some x0 = f H13 ∧ H13 = x),
-                      match H14 with
-                      | conj x3 x4 =>
-                          (λ (H15 : Some x0 = f H13) (H16 : H13 = x),
-                             eq_ind_r
-                               (λ H17 : A, Some x0 = f H17 → f x = Some x0)
-                               (λ H17 : Some x0 = f x, eq_sym H17) H16 H15)
-                            x3 x4
-                      end) x1 x2
-               end)
-            (λ H12 : f x = Some x0,
-               ex_intro (λ x1, Some x0 = f x1 ∧ x1 = x) x
-                 (conj (eq_sym H12) eq_refl))
-          :
-          (∃ x1, Some x0 = f x1 ∧ x1 = x) ↔ f x = Some x0) H6) H11))
- *)
-  Qed.
+  Proof. set_solver. Qed.
   Lemma set_omap_singleton_Some f x y : f x = Some y → set_omap f {[ x ]} ≡ {[ y ]}.
   Proof. intros Hx. by rewrite set_omap_singleton, Hx. Qed.
   Lemma set_omap_singleton_None f x : f x = None → set_omap f {[ x ]} ≡ ∅.

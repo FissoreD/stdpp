@@ -322,6 +322,7 @@ reverse.
 
 Various std++ tactics assume that this class is only instantiated if [≡]
 is an equivalence relation. *)
+Elpi TC.Pending_mode ! !.
 Class LeibnizEquiv A `{Equiv A} :=
   leibniz_equiv (x y : A) : x ≡ y → x = y.
 Global Hint Mode LeibnizEquiv ! ! : typeclass_instances.
@@ -365,6 +366,7 @@ Global Hint Extern 0 (_ ≡ _) => symmetry; assumption : core.
 (** ** Decidable propositions *)
 (** This type class by (Spitters/van der Weegen, 2011) collects decidable
 propositions. *)
+Elpi TC.Pending_mode !.
 Class Decision (P : Prop) := decide : {P} + {¬P}.
 Global Hint Mode Decision ! : typeclass_instances.
 Global Arguments decide _ {_} : simpl never, assert.
@@ -384,20 +386,17 @@ an explicit class instead of a notation for two reasons:
   Using the [RelDecision], the [f] is hidden under a lambda, which prevents
   unnecessary evaluation. *)
 
+(* TODO: here mode to be changed... *)
+Elpi TC.Pending_mode - - +.
 Class RelDecision {A B} (R : A → B → Prop) :=
   decide_rel x y :> Decision (R x y).
-
-(* Elpi Query TC.Solver lp:{{
-  coq.env.typeof {{:gref decide_rel}} S.
-}}.
-xx. *)
-
 Global Hint Mode RelDecision ! ! ! : typeclass_instances.
 Global Arguments decide_rel {_ _} _ {_} _ _ : simpl never, assert.
 Notation EqDecision A := (RelDecision (=@{A})).
 
 (** ** Inhabited types *)
 (** This type class collects types that are inhabited. *)
+Elpi TC.Pending_mode !.
 Class Inhabited (A : Type) : Type := populate { inhabitant : A }.
 Global Hint Mode Inhabited ! : typeclass_instances.
 Global Arguments populate {_} _ : assert.
@@ -406,6 +405,7 @@ Global Arguments populate {_} _ : assert.
 (** This type class collects types that are proof irrelevant. That means, all
 elements of the type are equal. We use this notion only used for propositions,
 but by universe polymorphism we can generalize it. *)
+Elpi TC.Pending_mode !.
 Class ProofIrrel (A : Type) : Prop := proof_irrel (x y : A) : x = y.
 Global Hint Mode ProofIrrel ! : typeclass_instances.
 
@@ -520,12 +520,14 @@ relation [R] instead of [⊆] to support multiple orders on the same type. *)
 Definition strict {A} (R : relation A) : relation A := λ X Y, R X Y ∧ ¬R Y X.
 Global Instance: Params (@strict) 2 := {}.
 
+Elpi TC.Pending_mode ! !.
 Class PartialOrder {A} (R : relation A) : Prop := {
   partial_order_pre :> PreOrder R;
   partial_order_anti_symm :> AntiSymm (=) R
 }.
 Global Hint Mode PartialOrder ! ! : typeclass_instances.
 
+Elpi TC.Pending_mode ! !.
 Class TotalOrder {A} (R : relation A) : Prop := {
   total_order_partial :> PartialOrder R;
   total_order_trichotomy :> Trichotomy (strict R)
@@ -944,7 +946,6 @@ Section prod_setoid.
 End prod_setoid.
 
 Global Typeclasses Opaque prod_equiv.
-
 Global Instance prod_leibniz `{LeibnizEquiv A, LeibnizEquiv B} :
   LeibnizEquiv (A * B).
 Proof. intros [??] [??] [??]; f_equal; apply leibniz_equiv; auto. Qed.
@@ -1064,12 +1065,14 @@ Definition proj2_ex {P : Prop} {Q : P → Prop} (p : ∃ x, Q x) : Q (proj1_ex p
 relations on sets: the empty set [∅], the union [(∪)],
 intersection [(∩)], and difference [(∖)], the singleton [{[_]}], the subset
 [(⊆)] and element of [(∈)] relation, and disjointess [(##)]. *)
+Elpi TC.Pending_mode !.
 Class Empty A := empty: A.
 Global Hint Mode Empty ! : typeclass_instances.
 Notation "∅" := empty (format "∅") : stdpp_scope.
 
 Global Instance empty_inhabited `(Empty A) : Inhabited A := populate ∅.
 
+Elpi TC.Pending_mode !.
 Class Union A := union: A → A → A.
 Global Hint Mode Union ! : typeclass_instances.
 Global Instance: Params (@union) 2 := {}.
@@ -1084,6 +1087,7 @@ Definition union_list `{Empty A} `{Union A} : list A → A := fold_right (∪) �
 Global Arguments union_list _ _ _ !_ / : assert.
 Notation "⋃ l" := (union_list l) (at level 20, format "⋃  l") : stdpp_scope.
 
+Elpi TC.Pending_mode !.
 Class Intersection A := intersection: A → A → A.
 Global Hint Mode Intersection ! : typeclass_instances.
 Global Instance: Params (@intersection) 2 := {}.
@@ -1092,6 +1096,7 @@ Notation "(∩)" := intersection (only parsing) : stdpp_scope.
 Notation "( x ∩.)" := (intersection x) (only parsing) : stdpp_scope.
 Notation "(.∩ x )" := (λ y, intersection y x) (only parsing) : stdpp_scope.
 
+Elpi TC.Pending_mode !.
 Class Difference A := difference: A → A → A.
 Global Hint Mode Difference ! : typeclass_instances.
 Global Instance: Params (@difference) 2 := {}.
@@ -1102,6 +1107,7 @@ Notation "(.∖ x )" := (λ y, difference y x) (only parsing) : stdpp_scope.
 Infix "∖*" := (zip_with (∖)) (at level 40, left associativity) : stdpp_scope.
 Notation "(∖*)" := (zip_with (∖)) (only parsing) : stdpp_scope.
 
+Elpi TC.Pending_mode - !.
 Class Singleton A B := singleton: A → B.
 Global Hint Mode Singleton - ! : typeclass_instances.
 Global Instance: Params (@singleton) 3 := {}.
@@ -1110,6 +1116,7 @@ Notation "{[ x ; y ; .. ; z ]}" :=
   (union .. (union (singleton x) (singleton y)) .. (singleton z))
   (at level 1) : stdpp_scope.
 
+Elpi TC.Pending_mode !.
 Class SubsetEq A := subseteq: relation A.
 Global Hint Mode SubsetEq ! : typeclass_instances.
 Global Instance: Params (@subseteq) 2 := {}.
@@ -1157,6 +1164,7 @@ Note that in principle we could reuse the set singleton [{[ _ ]}] for multisets,
 and define [{[+ x1; ..; xn +]}] as [{[ x1 ]} ⊎ .. ⊎ {[ xn ]}]. However, this
 would risk accidentally using [{[ x1; ..; xn ]}] for multisets (leading to
 unexpected results) and lead to ambigious pretty printing for [{[+ x +]}]. *)
+Elpi TC.Pending_mode !.
 Class DisjUnion A := disj_union: A → A → A.
 Global Hint Mode DisjUnion ! : typeclass_instances.
 Global Instance: Params (@disj_union) 2 := {}.
@@ -1165,6 +1173,7 @@ Notation "(⊎)" := disj_union (only parsing) : stdpp_scope.
 Notation "( x ⊎.)" := (disj_union x) (only parsing) : stdpp_scope.
 Notation "(.⊎ x )" := (λ y, disj_union y x) (only parsing) : stdpp_scope.
 
+Elpi TC.Pending_mode - !.
 Class SingletonMS A B := singletonMS: A → B.
 Global Hint Mode SingletonMS - ! : typeclass_instances.
 Global Instance: Params (@singletonMS) 3 := {}.
@@ -1181,6 +1190,7 @@ Fixpoint list_to_set `{Singleton A C, Empty C, Union C} (l : list A) : C :=
 Fixpoint list_to_set_disj `{SingletonMS A C, Empty C, DisjUnion C} (l : list A) : C :=
   match l with [] => ∅ | x :: l => {[+ x +]} ⊎ list_to_set_disj l end.
 
+Elpi TC.Pending_mode - !.
 Class ScalarMul N A := scalar_mul : N → A → A.
 Global Hint Mode ScalarMul - ! : typeclass_instances.
 (** The [N] arguments is typically [nat] or [Z], so we do not want to rewrite
@@ -1196,9 +1206,12 @@ Notation "(.*: x )" := (λ y, scalar_mul y x) (only parsing) : stdpp_scope.
 (** The class [Lexico A] is used for the lexicographic order on [A]. This order
 is used to create finite maps, finite sets, etc, and is typically different from
 the order [(⊆)]. *)
+Elpi TC.Pending_mode !.
 Class Lexico A := lexico: relation A.
 Global Hint Mode Lexico ! : typeclass_instances.
 
+(* TODO: here mode to change... *)
+(* Elpi TC.Pending_mode - !. *)
 Class ElemOf A B := elem_of: A → B → Prop.
 Global Hint Mode ElemOf - ! : typeclass_instances.
 Global Instance: Params (@elem_of) 3 := {}.
@@ -1217,6 +1230,7 @@ Notation "(∈@{ B } )" := (@elem_of _ B _) (only parsing) : stdpp_scope.
 Notation "x ∉@{ B } X" := (¬x ∈@{B} X) (at level 80, only parsing) : stdpp_scope.
 Notation "(∉@{ B } )" := (λ x X, x ∉@{B} X) (only parsing) : stdpp_scope.
 
+Elpi TC.Pending_mode !.
 Class Disjoint A := disjoint : A → A → Prop.
 Global Hint Mode Disjoint ! : typeclass_instances.
 Global Instance: Params (@disjoint) 2 := {}.
@@ -1234,9 +1248,12 @@ Notation "(##*)" := (Forall2 (##)) (only parsing) : stdpp_scope.
 Global Hint Extern 0 (_ ## _) => symmetry; eassumption : core.
 Global Hint Extern 0 (_ ##* _) => symmetry; eassumption : core.
 
+(* TODO: here mode to change *)
+(* Elpi TC.Pending_mode - !. *)
 Class Filter A B := filter: ∀ (P : A → Prop) `{∀ x, Decision (P x)}, B → B.
 Global Hint Mode Filter - ! : typeclass_instances.
 
+Elpi TC.Pending_mode - !.
 Class UpClose A B := up_close : A → B.
 Global Hint Mode UpClose - ! : typeclass_instances.
 Notation "↑ x" := (up_close x) (at level 20, format "↑ x").
@@ -1246,26 +1263,31 @@ Notation "↑ x" := (up_close x) (at level 20, format "↑ x").
 and fmap. We use these type classes merely for convenient overloading of
 notations and do not formalize any theory on monads (we do not even define a
 class with the monad laws). *)
+Elpi TC.Pending_mode !.
 Class MRet (M : Type → Type) := mret: ∀ {A}, A → M A.
 Global Arguments mret {_ _ _} _ : assert.
 Global Instance: Params (@mret) 3 := {}.
 Global Hint Mode MRet ! : typeclass_instances.
 
+Elpi TC.Pending_mode !.
 Class MBind (M : Type → Type) := mbind : ∀ {A B}, (A → M B) → M A → M B.
 Global Arguments mbind {_ _ _ _} _ !_ / : assert.
 Global Instance: Params (@mbind) 4 := {}.
 Global Hint Mode MBind ! : typeclass_instances.
 
+Elpi TC.Pending_mode !.
 Class MJoin (M : Type → Type) := mjoin: ∀ {A}, M (M A) → M A.
 Global Arguments mjoin {_ _ _} !_ / : assert.
 Global Instance: Params (@mjoin) 3 := {}.
 Global Hint Mode MJoin ! : typeclass_instances.
 
+Elpi TC.Pending_mode !.
 Class FMap (M : Type → Type) := fmap : ∀ {A B}, (A → B) → M A → M B.
 Global Arguments fmap {_ _ _ _} _ !_ / : assert.
 Global Instance: Params (@fmap) 4 := {}.
 Global Hint Mode FMap ! : typeclass_instances.
 
+Elpi TC.Pending_mode !.
 Class OMap (M : Type → Type) := omap: ∀ {A B}, (A → option B) → M A → M B.
 Global Arguments omap {_ _ _ _} _ !_ / : assert.
 Global Instance: Params (@omap) 4 := {}.
@@ -1293,6 +1315,7 @@ Notation "ps .*2" := (fmap (M:=list) snd ps)
   (at level 2, left associativity, format "ps .*2").
 
 (** For any monad that has a builtin way to throw an exception/error *)
+Elpi TC.Pending_mode ! !.
 Class MThrow (E : Type) (M : Type → Type) := mthrow : ∀ {A}, E → M A.
 Global Arguments mthrow {_ _ _ _} _ : assert.
 Global Instance: Params (@mthrow) 4 := {}.
@@ -1601,6 +1624,7 @@ Qed.
 
 (** Decidability of equality of the carrier set is admissible, but we add it
 anyway so as to avoid cycles in type class search. *)
+TC.Pending_mode - ! - - - - - - - -. 
 Class FinSet A C `{ElemOf A C, Empty C, Singleton A C, Union C,
     Intersection C, Difference C, Elements A C, EqDecision A} : Prop := {
   fin_set_set :> Set_ A C;
@@ -1637,8 +1661,8 @@ Class MonadSet M `{∀ A, ElemOf A (M A),
     x ∈ mjoin X ↔ ∃ Y : M A, x ∈ Y ∧ Y ∈ X
 }.
 
-Elpi Print TC.Solver.
-Elpi Typecheck TC.Solver.
+(* Elpi Print TC.Solver. *)
+(* Elpi Typecheck TC.Solver. *)
 
 (** The [Infinite A] class axiomatizes types [A] with infinitely many elements.
 It contains a function [fresh : list A → A] that given a list [xs] gives an
@@ -1681,5 +1705,4 @@ Elpi Accumulate TC.Solver lp:{{
     coq.unify-eq G F ok,
     tc-stdpp.base.tc-Inj A B R1 R3 G S.
 }}.
-Elpi Print TC.Solver.
-Elpi Typecheck TC.Solver.
+(* Elpi Typecheck TC.Solver. *)

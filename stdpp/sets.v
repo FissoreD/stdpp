@@ -21,7 +21,8 @@ Global Instance set_disjoint_instance `{ElemOf A C} : Disjoint C | 20 := λ X Y,
   ∀ x, x ∈ X → x ∈ Y → False.
 Global Typeclasses Opaque set_equiv_instance set_subseteq_instance set_disjoint_instance.
 
-Elpi Query TC.Solver lp:{{
+Elpi Command A.
+Elpi Query lp:{{
   coq.option.add ["NO_SET_UNFOLD_DEFAULT"] (coq.option.bool ff) ff.
 }}.
 

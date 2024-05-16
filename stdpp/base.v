@@ -13,6 +13,11 @@ From Coq Require Import Permutation.
 Export ListNotations.
 From Coq.Program Require Export Basics Syntax.
 From stdpp Require Import options.
+From elpi Require Import tc.
+TC.AddAllClasses.
+TC.AddAllInstances.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+
 
 (** This notation is necessary to prevent [length] from being printed
 as [strings.length] if strings.v is imported and later base.v. See
@@ -360,6 +365,8 @@ Global Hint Extern 0 (_ ≡ _) => symmetry; assumption : core.
 (** ** Decidable propositions *)
 (** This type class by (Spitters/van der Weegen, 2011) collects decidable
 propositions. *)
+
+TC.Pending_mode "!".
 Class Decision (P : Prop) := decide : {P} + {¬P}.
 Global Hint Mode Decision ! : typeclass_instances.
 Global Arguments decide _ {_} : simpl never, assert.
@@ -380,7 +387,7 @@ an explicit class instead of a notation for two reasons:
   unnecessary evaluation. *)
 Class RelDecision {A B} (R : A → B → Prop) :=
   decide_rel x y :> Decision (R x y).
-Global Hint Mode RelDecision ! ! ! : typeclass_instances.
+Global Hint Mode RelDecision - - + : typeclass_instances.
 Global Arguments decide_rel {_ _} _ {_} _ _ : simpl never, assert.
 Notation EqDecision A := (RelDecision (=@{A})).
 
@@ -875,6 +882,25 @@ Section prod_setoid.
   Global Instance prod_equivalence :
     Equivalence (≡@{A}) → Equivalence (≡@{B}) → Equivalence (≡@{A * B}) := _.
 
+  Elpi Accumulate  TC.Solver lp:{{
+    pred remove_equiv_prod_equiv i:term, o:term.
+    remove_equiv_prod_equiv T1 T3 :-
+      T1 = {{@equiv _ (@prod_equiv _ _ _ _)}},
+      T2 = {{@prod_relation lp:F lp:G lp:A lp:B}},
+      coq.unify-eq T1 T2 ok, 
+      remove_equiv_prod_equiv A X,
+      remove_equiv_prod_equiv B Y,
+      {{@prod_relation lp:F lp:G lp:X lp:Y}} = T3.
+    remove_equiv_prod_equiv (app L1) (app L2) :-
+      std.map L1 remove_equiv_prod_equiv L2.
+    remove_equiv_prod_equiv A A.
+
+    tc-stdpp.base.tc-Inj2  A B C R1 R2 R3 F S :-
+      R3 = app [global {{:gref equiv}} | _],
+      remove_equiv_prod_equiv R3 Res,
+      tc-stdpp.base.tc-Inj2  A B C R1 R2 Res F S.
+  }}.
+
   Global Instance pair_proper : Proper ((≡) ==> (≡) ==> (≡@{A*B})) pair := _.
   Global Instance pair_equiv_inj : Inj2 (≡) (≡) (≡@{A*B}) pair := _.
   Global Instance fst_proper : Proper ((≡@{A*B}) ==> (≡)) fst := _.
@@ -962,6 +988,27 @@ Section sum_relation.
 End sum_relation.
 
 Global Instance sum_equiv `{Equiv A, Equiv B} : Equiv (A + B) := sum_relation (≡) (≡).
+
+Elpi Accumulate TC.Solver lp:{{
+    pred remove_equiv_sum_equiv i:term, o:term.
+    remove_equiv_sum_equiv T1 T3 :-
+      T1 = {{@equiv _ (@sum_equiv _ _ _ _)}}, 
+      T2 = {{@sum_relation lp:F lp:G lp:A lp:B}},
+      coq.unify-eq T1 T2 ok, 
+      remove_equiv_sum_equiv A X,
+      remove_equiv_sum_equiv B Y,
+      {{@sum_relation lp:F lp:G lp:X lp:Y}} = T3.
+    remove_equiv_sum_equiv (app L1) (app L2) :- 
+      std.map L1 remove_equiv_sum_equiv L2.
+    remove_equiv_sum_equiv A A.
+    
+    :after "lastHook" 
+    tc-stdpp.base.tc-Inj A B R1 R2 F S :-
+      remove_equiv_sum_equiv R2 R2',
+      if (same_term R2 R2') fail
+        (tc-stdpp.base.tc-Inj A B R1 R2' F S).
+}}.
+
 Global Instance inl_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inl A B) := _.
 Global Instance inr_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inr A B) := _.
 Global Instance inl_equiv_inj `{Equiv A, Equiv B} : Inj (≡) (≡) (@inl A B) := _.

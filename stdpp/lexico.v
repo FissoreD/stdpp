@@ -93,6 +93,8 @@ Proof.
   | Gt => λ H, inright (nat_compare_Gt_gt _ _ H)
   end eq_refl).
 Defined.
+(* TODO: @FissoreD, why I need to re-add StrictOrder? Should it be loaded in base? *)
+Elpi TC.AddInstances StrictOrder.
 
 Global Instance N_lexico_po : StrictOrder (@lexico N _).
 Proof. unfold lexico, N_lexico. apply _. Qed.

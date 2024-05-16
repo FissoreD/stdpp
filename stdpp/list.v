@@ -21,6 +21,13 @@ Notation tail := tl.
 Notation take := firstn.
 Notation drop := skipn.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision A B {{le}} S :-
+    tc-stdpp.base.tc-RelDecision A B {{Nat.le}} S.
+  tc-stdpp.base.tc-Inj A B C D {{S}} S :-
+    tc-stdpp.base.tc-Inj A B C D {{Nat.succ}} S.
+}}.
+
 Global Arguments head {_} _ : assert.
 Global Arguments tail {_} _ : assert.
 
@@ -3969,6 +3976,12 @@ Section find.
          intros k z' [(->&->&?)|[??]]%list_lookup_insert_Some; eauto with lia.
   Qed.
 
+  Elpi Accumulate TC.Solver lp:{{
+    % Manual unfold of compose
+    tc-stdpp.base.tc-Decision (app [{{@compose}},_,_,_,F1,F2,X]) S :-
+      tc-stdpp.base.tc-Decision (app[F1,app[F2, X]]) S.
+  }}.
+  
   Lemma list_find_fmap {B : Type} (f : B → A) (l : list B) :
     list_find P (f <$> l) = prod_map id f <$> list_find (P ∘ f) l.
   Proof.

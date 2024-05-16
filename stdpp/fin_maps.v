@@ -235,6 +235,12 @@ Proof.
   destruct (m1 !! i), (m2 !! i), (m3 !! i); simplify_eq/=;
     done || etrans; eauto.
 Qed.
+Elpi Accumulate TC.Solver lp:{{
+  tc-Coq.Classes.RelationClasses.tc-PreOrder A (app[{{@subseteq}}|_] as T) S :-
+    T' = {{@map_included _ _ _ _ _}},
+    coq.unify-eq T T' ok,
+    tc-Coq.Classes.RelationClasses.tc-PreOrder A T' S.
+}}.
 Global Instance map_subseteq_po {A} : PartialOrder (⊆@{M A}).
 Proof.
   split; [apply _|].
@@ -1360,6 +1366,8 @@ Proof.
   - by rewrite map_to_list_singleton.
 Qed.
 
+Elpi TC.AddInstances flip_PreOrder.
+
 Lemma map_fold_insert {A B} (R : relation B) `{!PreOrder R}
     (f : K → A → B → B) (b : B) (i : K) (x : A) (m : M A) :
   (∀ j z, Proper (R ==> R) (f j z)) →
@@ -1793,6 +1801,23 @@ Section map_filter.
       by rewrite map_to_list_insert, IH by (rewrite map_lookup_filter_None; auto).
     - by rewrite map_filter_insert_not' by naive_solver.
   Qed.
+
+  Goal ∀ (B: Type) (x : K * B) (f : B → A), (λ '(i, x0), P (i, f x0)) x = @uncurry K B Prop (fun x y => P (pair x (f y))) x.
+    auto.
+  Qed.
+
+  Elpi Accumulate TC.Solver lp:{{
+    tc-stdpp.base.tc-Decision (match X {{fun (_: prod lp:A lp:B) => Prop}} [B1]) S :-
+      coq.mk-app B1 [X] R,
+      F = app[{{@uncurry}},A,B,{{Prop}},R,X],
+      std.spy(tc-stdpp.base.tc-Decision F S).
+  }}.
+  Goal ∀ (B: Type) (x : K * B) (f : B → A), Decision ((λ '(i, x0), P (i, f x0)) x).
+    intros.
+    Elpi Trace.
+    apply _.
+  Qed.
+
 
   Lemma map_filter_fmap {B} (f : B → A) (m : M B) :
     filter P (f <$> m) = f <$> filter (λ '(i, x), P (i, (f x))) m.

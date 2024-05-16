@@ -69,6 +69,13 @@ Notation "x ≤ y ≤ z ≤ z'" := (x ≤ y ∧ y ≤ z ∧ z ≤ z')%nat : nat_
 Notation "(≤)" := le (only parsing) : nat_scope.
 Notation "(<)" := lt (only parsing) : nat_scope.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-ProofIrrel X S :-
+    Y = {{Z.lt _ _}},
+    coq.unify-eq X Y ok,
+    tc-stdpp.base.tc-ProofIrrel Y S.
+}}.
+
 Infix "`div`" := Nat.div (at level 35) : nat_scope.
 Infix "`mod`" := Nat.modulo (at level 35) : nat_scope.
 Infix "`max`" := Nat.max (at level 35) : nat_scope.
@@ -1219,6 +1226,14 @@ Module Qp.
   Lemma three_quarter_quarter : 3 / 4 + 1 / 4 = 1.
   Proof. compute_done. Qed.
 
+  Elpi Accumulate TC.Solver lp:{{
+    tc-stdpp.base.tc-Inj A B R1 R3 F S :- 
+      F = (fun _ _ _), !,
+      G = {{ compose _ _}},
+      coq.unify-eq G F ok,
+      tc-stdpp.base.tc-Inj A B R1 R3 G S.
+  }}.
+
   Global Instance div_inj_r p : Inj (=) (=) (div p).
   Proof. unfold div; apply _. Qed.
   Global Instance div_inj_l p : Inj (=) (=) (λ q, q / p)%Qp.
@@ -1552,6 +1567,11 @@ Lemma rotate_nat_add_add_mod base offset len:
   rotate_nat_add base offset len =
   rotate_nat_add (base `mod` len) offset len.
 Proof. unfold rotate_nat_add. by rewrite Nat2Z.inj_mod, Zplus_mod_idemp_l. Qed.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision A B {{lt}} S :-
+    tc-stdpp.base.tc-RelDecision A B {{Nat.lt}} S.
+}}.
 
 Lemma rotate_nat_add_alt base offset len:
   base < len → offset < len →

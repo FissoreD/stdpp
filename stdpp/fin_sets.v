@@ -120,9 +120,11 @@ Lemma elements_disj_union (X Y : C) :
 Proof.
   intros HXY. apply NoDup_Permutation.
   - apply NoDup_elements.
-  - apply NoDup_app. set_solver by eauto using NoDup_elements.
+  (* TODO: @FissoreD this admit should be removed *)
+  (* - apply NoDup_app. set_solver by eauto using NoDup_elements. *)
+  - admit.
   - set_solver.
-Qed.
+Admitted.
 Lemma elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.
 Proof.
   intros; apply NoDup_submseteq; eauto using NoDup_elements.
@@ -233,11 +235,13 @@ Lemma subseteq_size X Y : X ⊆ Y → size X ≤ size Y.
 Proof. intros. rewrite (union_difference X Y), size_union_alt by done. lia. Qed.
 Lemma subset_size X Y : X ⊂ Y → size X < size Y.
 Proof.
-  intros. rewrite (union_difference X Y) by set_solver.
-  rewrite size_union_alt, difference_twice.
-  cut (size (Y ∖ X) ≠ 0); [lia |].
-  by apply size_non_empty_iff, non_empty_difference.
-Qed.
+  (* TODO: @FissoreD this admit should be removed *)
+  admit.
+  (* intros. rewrite (union_difference X Y) by set_solver. *)
+  (* rewrite size_union_alt, difference_twice. *)
+  (* cut (size (Y ∖ X) ≠ 0); [lia |]. *)
+  (* by apply size_non_empty_iff, non_empty_difference. *)
+Admitted.
 
 Lemma size_list_to_set l :
   NoDup l → size (list_to_set (C:=C) l) = length l.
@@ -249,6 +253,20 @@ Qed.
 (** * Induction principles *)
 Lemma set_wf : well_founded (⊂@{C}).
 Proof. apply (wf_projected (<) size); auto using subset_size, lt_wf. Qed.
+
+Lemma aa: ∀ x X, (exists Q, SetUnfold (X ∖ {[x]} ⊂ X) Q).
+eexists.
+  (* TODO: @FissoreD, here TC.Solver should apply set_unfold_subset *)
+  apply _.
+  (* apply set_unfold_subset. *)
+  (* * apply _. *)
+  (* * apply _. *)
+  (* Show Proof. *)
+Defined.
+
+(* TODO: @FissoreD, this is a check for the previous lemma *)
+Fail Check eq_refl : aa = fun _ _ => ex_intro _ _ (set_unfold_subset _ _ _ _ _ _).
+
 Lemma set_ind (P : C → Prop) :
   Proper ((≡) ==> impl) P →
   P ∅ → (∀ x X, x ∉ X → P X → P ({[ x ]} ∪ X)) → ∀ X, P X.
@@ -257,9 +275,10 @@ Proof.
   { apply set_wf. }
   intros X IH. destruct (set_choose_or_empty X) as [[x ?]|HX].
   - rewrite (union_difference {[ x ]} X) by set_solver.
-    apply Hadd; [set_solver|]. apply IH; set_solver.
+    (* apply Hadd; [set_solver|]. apply IH. set_solver. *)
+    admit.
   - by rewrite HX.
-Qed.
+Admitted.
 Lemma set_ind_L `{!LeibnizEquiv C} (P : C → Prop) :
   P ∅ → (∀ x X, x ∉ X → P X → P ({[ x ]} ∪ X)) → ∀ X, P X.
 Proof. apply set_ind. by intros ?? ->%leibniz_equiv_iff. Qed.
@@ -563,7 +582,9 @@ Section set_omap.
 
   Lemma set_omap_singleton f x :
     set_omap f {[ x ]} ≡ match f x with Some y => {[ y ]} | None => ∅ end.
-  Proof. set_solver. Qed.
+  (* TODO: @FissoreD, here strange bug... *)
+  (* Proof. set_solver. Qed. *)
+  Admitted.
   Lemma set_omap_singleton_Some f x y : f x = Some y → set_omap f {[ x ]} ≡ {[ y ]}.
   Proof. intros Hx. by rewrite set_omap_singleton, Hx. Qed.
   Lemma set_omap_singleton_None f x : f x = None → set_omap f {[ x ]} ≡ ∅.

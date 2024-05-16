@@ -22,3 +22,7 @@ Makefile.package.*
 html/
 builddep/
 _opam
+
+*.txt
+*.html
+*.timing

@@ -13,13 +13,14 @@ Elpi Accumulate TC.Solver lp:{{
     L = [seal G].
 }}.
 
+(* Elpi TC.Pending_mode ! -. *)
 Class Finite A `{EqDecision A} := {
   enum : list A;
   (* [NoDup] makes it easy to define the cardinality of the type. *)
   NoDup_enum : NoDup enum;
   elem_of_enum x : x ∈ enum
 }.
-Global Hint Mode Finite ! - : typeclass_instances.
+Global Hint Mode Finite ! - : typeclass_instances. (*Mode also added in elpi*)
 Global Arguments enum : clear implicits.
 Global Arguments enum _ {_ _} : assert.
 Global Arguments NoDup_enum : clear implicits.

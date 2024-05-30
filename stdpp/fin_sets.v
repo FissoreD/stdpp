@@ -12,6 +12,11 @@ Set Default Proof Using "Type*".
 Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
 Global Typeclasses Opaque set_size.
 
+Elpi Command B.
+Elpi Query lp:{{
+  coq.option.add ["TC", "allow", "evar1"] (coq.option.bool ff) ff.
+}}.
+
 Definition set_fold `{Elements A C} {B}
   (f : A → B → B) (b : B) : C → B := foldr f b ∘ elements.
 Global Typeclasses Opaque set_fold.
@@ -121,7 +126,24 @@ Proof.
   intros HXY. apply NoDup_Permutation.
   - apply NoDup_elements.
   (* TODO: @FissoreD this admit should be removed *)
-  (* - apply NoDup_app. set_solver by eauto using NoDup_elements. *)
+  - apply NoDup_app. 
+  Set TC allow evar1.
+  Elpi Accumulate TC.Solver lp:{{
+    % print-goal.
+    % print-solution.
+  }}.
+  Elpi Accumulate TC.Solver lp:{{
+  :before "solve-aux-fail"
+  solve-aux G L :-
+    coq.option.get ["TC", "allow", "evar1"] (coq.option.bool tt), !,
+    coq.say "SEALING GOAL",
+    L = [seal G].
+}}.
+(* Elpi Typecheck TC.Solver. *)
+  Set TC allow evar1.
+  (* Elpi Override TC TC.Solver None. *)
+  (* Set Elpi Typeclasses Debug. *)
+  set_solver by eauto using NoDup_elements.
   - admit.
   - set_solver.
 Admitted.

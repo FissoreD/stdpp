@@ -23,10 +23,12 @@ and [Pmap]). *)
 folds a function [f] over each element of the map [m]. The order in which the
 elements are passed to [f] is unspecified. *)
 
+(* TODO: @FissoreD Here multiple modes... *)
+(*TC.Pending_mode - - -.*)
 Class MapFold K A M := map_fold B : (K → A → B → B) → B → M → B.
 Global Arguments map_fold {_ _ _ _ _} _ _ _.
-Global Hint Mode MapFold - - ! : typeclass_instances.
-Global Hint Mode MapFold ! - - : typeclass_instances.
+Global Hint Mode MapFold - - ! : typeclass_instances. (*Mode also added in elpi*)
+Global Hint Mode MapFold ! - - : typeclass_instances. (*Mode also added in elpi*)
 
 (** Make sure that [map_fold] (and definitions based on it) are not unfolded
 too eagerly by unification. See [only_evens_Some] in [tests/pmap_gmap] for an

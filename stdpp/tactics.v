@@ -476,11 +476,12 @@ when the goal is of the form [R1 x y] and there are assumptions of the form [R2
 x y]. We cannot use Coq's [subrelation] class here as adding the [subrelation]
 instances causes lots of backtracking in the [Proper] hint search, resulting in
 very slow/diverging [rewrite]s due to exponential instance search. *)
+(*TC.Pending_mode + ! !.*)
 Class SolveProperSubrelation {A} (R R' : relation A) :=
   is_solve_proper_subrelation x y : R x y → R' x y.
 (** We use [!] to handle indexed relations such as [dist], where we
 can have an [R n] assumption and a [R ?m] goal. *)
-Global Hint Mode SolveProperSubrelation + ! ! : typeclass_instances.
+Global Hint Mode SolveProperSubrelation + ! ! : typeclass_instances. (*Mode also added in elpi*)
 Global Arguments is_solve_proper_subrelation {A R R' _ x y}.
 
 Global Instance subrelation_solve_proper_subrelation {A} (R R' : relation A) :

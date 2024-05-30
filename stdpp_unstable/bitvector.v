@@ -242,10 +242,11 @@ Proof. intros ?. rewrite bv_wrap_spec; [|lia]. case_bool_decide; [|done]. lia. Q
 (** The [BvWf] typeclass checks that the integer [z] can be
 interpreted as a [n]-bit integer. [BvWf] is a typeclass such that it
 can be automatically inferred for bitvector constants. *)
+(*TC.Pending_mode + +.*)
 Class BvWf (n : N) (z : Z) : Prop :=
     bv_wf : (0 <=? z) && (z <? bv_modulus n)
 .
-Global Hint Mode BvWf + + : typeclass_instances.
+Global Hint Mode BvWf + + : typeclass_instances. (*Mode also added in elpi*)
 Global Instance bv_wf_pi n z : ProofIrrel (BvWf n z).
 Proof. unfold BvWf. apply _. Qed.
 Global Instance bv_wf_dec n z : Decision (BvWf n z).

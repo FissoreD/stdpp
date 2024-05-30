@@ -195,10 +195,11 @@ simplifies occurences of [multiplicity x {[ y ]}] as follows:
 The tests [test_big_X] in [tests/multiset_solver.v] show the second step reduces
 the running time significantly (from >10 seconds to <1 second). *)
 
+(*TC.Pending_mode + + + - + -.*)
 Class MultisetUnfold `{Countable A} (x : A) (X : gmultiset A) (n : nat) :=
   { multiset_unfold : multiplicity x X = n }.
 Global Arguments multiset_unfold {_ _ _} _ _ _ {_} : assert.
-Global Hint Mode MultisetUnfold + + + - + - : typeclass_instances.
+Global Hint Mode MultisetUnfold + + + - + - : typeclass_instances. (*Mode also added in elpi*)
 
 Section multiset_unfold.
   Context `{Countable A}.

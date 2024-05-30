@@ -9,12 +9,13 @@ the results of [encode]. This instance of [EqDecision A] is very inefficient, so
 the native decider is typically preferred for actual computation. To avoid
 overlapping instances, we include [EqDecision A] explicitly as a parameter of
 [Countable A]. *)
+(*TC.Pending_mode ! -.*)
 Class Countable A `{EqDecision A} := {
   encode : A → positive;
   decode : positive → option A;
   decode_encode x : decode (encode x) = Some x
 }.
-Global Hint Mode Countable ! - : typeclass_instances.
+Global Hint Mode Countable ! - : typeclass_instances. (*Mode also added in elpi*)
 Global Arguments encode : simpl never.
 Global Arguments decode : simpl never.
 

@@ -9,6 +9,12 @@ From stdpp Require Import options.
 locally (or things moved out of sections) as no default works well enough. *)
 Unset Default Proof Using.
 
+(* Elpi Accumulate  TC.Solver lp:{{
+  :before "coq-assign-evar-raw"
+  evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ 8 19 _, !,
+    hack-8-17.propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.
+}}. *)
+
 (* Higher precedence to make sure these instances are not used for other types
 with an [ElemOf] instance, such as lists. *)
 Global Instance set_equiv_instance `{ElemOf A C} : Equiv C | 20 := λ X Y,
@@ -96,16 +102,18 @@ involving just [∈]. For example, [A → x ∈ X ∪ ∅] becomes [A → x ∈ 
 This transformation is implemented using type classes instead of setoid
 rewriting to ensure that we traverse each term at most once and to be able to
 deal with occurences of the set operations under binders. *)
+(*TC.Pending_mode + -.*)
 Class SetUnfold (P Q : Prop) := { set_unfold : P ↔ Q }.
 Global Arguments set_unfold _ _ {_} : assert.
-Global Hint Mode SetUnfold + - : typeclass_instances.
+Global Hint Mode SetUnfold + - : typeclass_instances. (*Mode also added in elpi*)
 
 (** The class [SetUnfoldElemOf] is a more specialized version of [SetUnfold]
 for propositions of the shape [x ∈ X] to improve performance. *)
+(*TC.Pending_mode + + + - + -.*)
 Class SetUnfoldElemOf `{ElemOf A C} (x : A) (X : C) (Q : Prop) :=
   { set_unfold_elem_of : x ∈ X ↔ Q }.
 Global Arguments set_unfold_elem_of {_ _ _} _ _ _ {_} : assert.
-Global Hint Mode SetUnfoldElemOf + + + - + - : typeclass_instances.
+Global Hint Mode SetUnfoldElemOf + + + - + - : typeclass_instances. (*Mode also added in elpi*)
 
 Global Instance set_unfold_elem_of_default `{ElemOf A C} (x : A) (X : C) :
   SetUnfoldElemOf x X (x ∈ X) | 1000.
@@ -649,21 +657,45 @@ Section semi_set.
   Section dec.
     Context `{!RelDecision (≡@{C})}.
 
+
+Elpi Accumulate  TC.Solver lp:{{
+  :before "coq-assign-evar-raw"
+  evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ 8 19 _,
+    coq.say {coq.term->string X}, fail, !,
+    hack-8-17.propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.
+}}.
+
+(* Elpi Query TC.Solver lp:{{
+  T = {{(not (forall (x : lp:A) (_ : lp:B), lp:A))}},
+  % hack-8-17.propagate-Prop-constraint-inward T,
+  coq.typecheck T {{Prop}} R, coq.say R.
+}}. *)
+
+    Elpi TC.Get_class_info SetUnfold.
+
+    Elpi Accumulate TC.Solver lp:{{
+      :after "999"
+      tc-stdpp.sets.tc-SetUnfold A B C :- coq.error A B C.
+    }}.
     Lemma set_subseteq_inv X Y : X ⊆ Y → X ⊂ Y ∨ X ≡ Y.
-    Proof. destruct (decide (X ≡ Y)).
-      - by right.
-      - left.
-        Set 
-        admit.
-        (* TODO: @FissoreD this admit should be removed *)
-        (* set_solver.  *)
-      Admitted.
+    Proof. destruct (decide (X ≡ Y)); [by right|left].
+    assert (exists Z, SetUnfold (X ⊂ Y) Z).
+    - eexists.
+    Elpi Trace Browser.
+      apply _.
+      Show Proof.
+      (* Elpi Override TC TC.Solver None. *)
+    eapply set_unfold_1.
+  set_unfold.
+  try match goal with |- _ ∈ _ => apply dec_stable end;
+  naive_solver eauto.
+
+    
+    ;set_solver]. Qed.
     Lemma set_not_subset_inv X Y : X ⊄ Y → X ⊈ Y ∨ X ≡ Y.
-    (* TODO: @FissoreD same pb as before *)
-    (* Proof. destruct (decide (X ≡ Y)). [by right|left;set_solver]. Qed. *)
-    Admitted.
+    Proof. destruct (decide (X ≡ Y)); [by right|left;set_solver]. Qed.
     Lemma non_empty_union X Y : X ∪ Y ≢ ∅ ↔ X ≢ ∅ ∨ Y ≢ ∅.
-    Proof. destruct (decide (X ≡ ∅)); set_solver. Qed.
+    Proof. Time destruct (decide (X ≡ ∅)); set_solver. Qed.
     Lemma non_empty_union_list Xs : ⋃ Xs ≢ ∅ → Exists (.≢ ∅) Xs.
     Proof. rewrite empty_union_list. apply (not_Forall_Exists _). Qed.
   End dec.
@@ -754,9 +786,7 @@ Section set.
   Lemma difference_disjoint X Y : X ## Y → X ∖ Y ≡ X.
   Proof. set_solver. Qed.
   Lemma subset_difference_elem_of x X : x ∈ X → X ∖ {[ x ]} ⊂ X.
-  (* Proof. set_solver. Qed. *)
-  (* TODO: @FissoreD this admit should be removed *)
-  Admitted.
+  Proof. set_solver. Qed.
 
   Lemma difference_difference_l X Y Z : (X ∖ Y) ∖ Z ≡ X ∖ (Y ∪ Z).
   Proof. set_solver. Qed.

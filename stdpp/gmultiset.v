@@ -76,7 +76,17 @@ Section basic_lemmas.
   Lemma gmultiset_eq X Y : X = Y ↔ ∀ x, multiplicity x X = multiplicity x Y.
   Proof.
     split; [by intros ->|intros HXY].
-    destruct X as [X], Y as [Y]; f_equal; apply map_eq; intros x.
+    destruct X as [X], Y as [Y]; f_equal.
+    Check _ : FMap (gmap A).
+    Check _ : (∀ A0 : Type, Lookup _ A0 (gmap A A0)).
+    Check _ : ∀ A0 : Type, Empty (gmap A A0).
+    Check _ : ∀ A0 : Type, PartialAlter A A0 (gmap A A0).
+    Check _ : OMap (gmap A).
+    Check _ : Merge (gmap A).
+    Check _ : ∀ A0 : Type, MapFold A A0 (gmap A A0).
+    Check _ : EqDecision A.
+    Elpi Override TC TC.Solver None.
+    apply map_eq; intros x.
     specialize (HXY x); unfold multiplicity in *; simpl in *.
     repeat case_match; naive_solver lia.
   Qed.
@@ -153,6 +163,8 @@ Section basic_lemmas.
   Global Instance gmultiset_elem_of_dec : RelDecision (∈@{gmultiset A}).
   Proof. refine (λ x X, cast_if (decide (0 < multiplicity x X))); done. Defined.
 End basic_lemmas.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
 (** * A solver for multisets *)
 (** We define a tactic [multiset_solver] that solves goals involving multisets.
@@ -195,7 +207,7 @@ simplifies occurences of [multiplicity x {[ y ]}] as follows:
 The tests [test_big_X] in [tests/multiset_solver.v] show the second step reduces
 the running time significantly (from >10 seconds to <1 second). *)
 
-(*TC.Pending_mode + + + - + -.*)
+Elpi TC.Pending_mode + + + - + -.
 Class MultisetUnfold `{Countable A} (x : A) (X : gmultiset A) (n : nat) :=
   { multiset_unfold : multiplicity x X = n }.
 Global Arguments multiset_unfold {_ _ _} _ _ _ {_} : assert.
@@ -245,7 +257,13 @@ Section multiset_unfold.
   Global Instance set_unfold_multiset_eq X Y f g :
     (∀ x, MultisetUnfold x X (f x)) → (∀ x, MultisetUnfold x Y (g x)) →
     SetUnfold (X = Y) (∀ x, f x = g x) | 0.
-  Proof. constructor. unfold_leibniz. by apply set_unfold_multiset_equiv. Qed.
+  Proof. constructor.
+    Elpi Override TC TC.Solver None.
+    (* TODO: @FissoreD Here infinite loop *)
+    unfold_leibniz. by apply set_unfold_multiset_equiv. Qed.
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+
   Global Instance set_unfold_multiset_subseteq X Y f g :
     (∀ x, MultisetUnfold x X (f x)) → (∀ x, MultisetUnfold x Y (g x)) →
     SetUnfold (X ⊆ Y) (∀ x, f x ≤ g x) | 0.
@@ -391,7 +409,6 @@ Section more_lemmas.
   Proof. multiset_solver. Qed.
   Lemma gmultiset_intersection_union_r X Y Z : (X ∪ Y) ∩ Z = (X ∩ Z) ∪ (Y ∩ Z).
   Proof. multiset_solver. Qed.
-
   (** For disjoint union (aka sum) *)
   Global Instance gmultiset_disj_union_comm : Comm (=@{gmultiset A}) (⊎).
   Proof. unfold Comm. multiset_solver. Qed.
@@ -486,6 +503,9 @@ Section more_lemmas.
   Global Instance list_to_set_disj_perm :
     Proper ((≡ₚ) ==> (=)) (list_to_set_disj (C:=gmultiset A)).
   Proof. induction 1; multiset_solver. Qed.
+
+  Elpi Override TC TC.Solver None.
+  (* TODO: @FissoreD here unification problem *)
 
   (** Properties of the elements operation *)
   Lemma gmultiset_elements_empty : elements (∅ : gmultiset A) = [].
@@ -775,3 +795,5 @@ Section more_lemmas.
     apply Hinsert, IH; multiset_solver.
   Qed.
 End more_lemmas.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.

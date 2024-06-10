@@ -411,7 +411,7 @@ an explicit class instead of a notation for two reasons:
   [decide (f x = f y)], this would then lead to evaluation of [f x] and [f y].
   Using the [RelDecision], the [f] is hidden under a lambda, which prevents
   unnecessary evaluation. *)
-(*TC.Pending_mode - - +.*)
+TC.Pending_mode - - +.
 Class RelDecision {A B} (R : A → B → Prop) :=
   decide_rel x y :> Decision (R x y).
 Global Hint Mode RelDecision - - + : typeclass_instances. (*Mode also added in elpi*)
@@ -1086,14 +1086,14 @@ Definition proj2_ex {P : Prop} {Q : P → Prop} (p : ∃ x, Q x) : Q (proj1_ex p
 relations on sets: the empty set [∅], the union [(∪)],
 intersection [(∩)], and difference [(∖)], the singleton [{[_]}], the subset
 [(⊆)] and element of [(∈)] relation, and disjointess [(##)]. *)
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class Empty A := empty: A.
 Global Hint Mode Empty ! : typeclass_instances. (*Mode also added in elpi*)
 Notation "∅" := empty (format "∅") : stdpp_scope.
 
 Global Instance empty_inhabited `(Empty A) : Inhabited A := populate ∅.
 
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class Union A := union: A → A → A.
 Global Hint Mode Union ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@union) 2 := {}.
@@ -1108,7 +1108,7 @@ Definition union_list `{Empty A} `{Union A} : list A → A := fold_right (∪) �
 Global Arguments union_list _ _ _ !_ / : assert.
 Notation "⋃ l" := (union_list l) (at level 20, format "⋃  l") : stdpp_scope.
 
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class Intersection A := intersection: A → A → A.
 Global Hint Mode Intersection ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@intersection) 2 := {}.
@@ -1117,7 +1117,7 @@ Notation "(∩)" := intersection (only parsing) : stdpp_scope.
 Notation "( x ∩.)" := (intersection x) (only parsing) : stdpp_scope.
 Notation "(.∩ x )" := (λ y, intersection y x) (only parsing) : stdpp_scope.
 
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class Difference A := difference: A → A → A.
 Global Hint Mode Difference ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@difference) 2 := {}.
@@ -1128,7 +1128,7 @@ Notation "(.∖ x )" := (λ y, difference y x) (only parsing) : stdpp_scope.
 Infix "∖*" := (zip_with (∖)) (at level 40, left associativity) : stdpp_scope.
 Notation "(∖*)" := (zip_with (∖)) (only parsing) : stdpp_scope.
 
-(*TC.Pending_mode - !.*)
+TC.Pending_mode - !.
 Class Singleton A B := singleton: A → B.
 Global Hint Mode Singleton - ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@singleton) 3 := {}.
@@ -1137,7 +1137,7 @@ Notation "{[ x ; y ; .. ; z ]}" :=
   (union .. (union (singleton x) (singleton y)) .. (singleton z))
   (at level 1) : stdpp_scope.
 
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class SubsetEq A := subseteq: relation A.
 Global Hint Mode SubsetEq ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@subseteq) 2 := {}.
@@ -1231,7 +1231,7 @@ the order [(⊆)]. *)
 Class Lexico A := lexico: relation A.
 Global Hint Mode Lexico ! : typeclass_instances. (*Mode also added in elpi*)
 
-(*TC.Pending_mode - !.*)
+TC.Pending_mode - !.
 Class ElemOf A B := elem_of: A → B → Prop.
 Global Hint Mode ElemOf - ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@elem_of) 3 := {}.
@@ -1634,7 +1634,7 @@ Global Hint Mode TopSet - ! - - - - - - - : typeclass_instances. (*Mode also add
 (** We axiomative a finite set as a set whose elements can be
 enumerated as a list. These elements, given by the [elements] function, may be
 in any order and should not contain duplicates. *)
-(*TC.Pending_mode - !.*)
+TC.Pending_mode - !.
 Class Elements A C := elements: C → list A.
 Global Hint Mode Elements - ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@elements) 3 := {}.
@@ -1665,7 +1665,7 @@ Qed.
 
 (** Decidability of equality of the carrier set is admissible, but we add it
 anyway so as to avoid cycles in type class search. *)
-(*TC.Pending_mode - ! - - - - - - - -.*)
+TC.Pending_mode - ! - - - - - - - -.
 Class FinSet A C `{ElemOf A C, Empty C, Singleton A C, Union C,
     Intersection C, Difference C, Elements A C, EqDecision A} : Prop := {
   fin_set_set :> Set_ A C;
@@ -1739,3 +1739,10 @@ Class Half A := half: A → A.
 Global Hint Mode Half ! : typeclass_instances. (*Mode also added in elpi*)
 Notation "½" := half (format "½") : stdpp_scope.
 Notation "½*" := (fmap (M:=list) half) : stdpp_scope.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-Decision (match X {{fun (_: prod _ _) => Prop}} _ as XX) S :- !,
+    F = app[{{@uncurry}},A,B,{{Prop}},TT,X],
+    coq.unify-eq XX F ok,
+    tc-stdpp.base.tc-Decision F S.
+}}.

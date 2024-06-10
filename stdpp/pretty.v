@@ -103,6 +103,7 @@ Proof.
   rewrite (N.div_mod x 10), (N.div_mod y 10) by done. lia.
 Qed.
 
+Elpi Override TC TC.Solver None.
 Global Instance pretty_nat : Pretty nat := λ x, pretty (N.of_nat x).
 Global Instance pretty_nat_inj : Inj (=@{nat}) (=) pretty.
 Proof. apply _. Qed.
@@ -124,3 +125,6 @@ Proof.
   - by edestruct (pretty_N_go_ne_dash (N.pos x) "").
   - by edestruct (pretty_N_go_ne_dash (N.pos y) "").
 Qed.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+

@@ -2,9 +2,12 @@ From stdpp Require Export countable coPset.
 From stdpp Require Import options.
 
 Definition namespace := list positive.
+Elpi Override TC TC.Solver None.
 Global Instance namespace_eq_dec : EqDecision namespace := _.
 Global Instance namespace_countable : Countable namespace := _.
 Global Typeclasses Opaque namespace.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
 Definition nroot : namespace := nil.
 
@@ -38,6 +41,8 @@ Section namespace.
   Lemma nclose_nroot : ↑nroot = (⊤:coPset).
   Proof. rewrite nclose_unseal. by apply (sig_eq_pi _). Qed.
 
+  (* TODO: @FissoreD here inifinite loop *)
+  Elpi Override TC TC.Solver None.
   Lemma nclose_subseteq N x : ↑N.@x ⊆ (↑N : coPset).
   Proof.
     intros p. unfold up_close. rewrite !nclose_unseal, !ndot_unseal.
@@ -137,3 +142,5 @@ Ltac solve_ndisj :=
   end;
   solve [eauto 12 with ndisj].
 Global Hint Extern 1000 => solve_ndisj : solve_ndisj.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.

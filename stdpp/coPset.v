@@ -193,6 +193,8 @@ Qed.
 Local Definition coPset_top_subseteq := top_subseteq (C:=coPset).
 Global Hint Resolve coPset_top_subseteq : core.
 
+(* TODO: @FissoreD Here infinite loop *)
+Elpi Override TC TC.Solver None.
 Global Instance coPset_leibniz : LeibnizEquiv coPset.
 Proof.
   intros X Y; rewrite set_equiv; intros HXY.
@@ -470,3 +472,5 @@ Proof.
   setoid_rewrite coPset_infinite_finite.
   eapply coPset_split.
 Qed.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.

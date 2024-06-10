@@ -9,7 +9,7 @@ the results of [encode]. This instance of [EqDecision A] is very inefficient, so
 the native decider is typically preferred for actual computation. To avoid
 overlapping instances, we include [EqDecision A] explicitly as a parameter of
 [Countable A]. *)
-(*TC.Pending_mode ! -.*)
+Elpi TC.Pending_mode ! -.
 Class Countable A `{EqDecision A} := {
   encode : A → positive;
   decode : positive → option A;

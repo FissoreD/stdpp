@@ -8,14 +8,19 @@ From stdpp Require Import options.
 (* Pick up extra assumptions from section parameters. *)
 Set Default Proof Using "Type*".
 
-(** Operations *)
-Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
-Global Typeclasses Opaque set_size.
-
 Elpi Command B.
 Elpi Query lp:{{
   coq.option.add ["TC", "allow", "evar1"] (coq.option.bool ff) ff.
 }}.
+
+Elpi Accumulate TC.Solver lp:{{
+  :after "0" solve-aux G [seal G] :- 
+    coq.option.get ["TC","allow","evar1"] (coq.option.bool tt), !.
+}}.
+
+(** Operations *)
+Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
+Global Typeclasses Opaque set_size.
 
 Definition set_fold `{Elements A C} {B}
   (f : A → B → B) (b : B) : C → B := foldr f b ∘ elements.
@@ -125,28 +130,18 @@ Lemma elements_disj_union (X Y : C) :
 Proof.
   intros HXY. apply NoDup_Permutation.
   - apply NoDup_elements.
-  (* TODO: @FissoreD this admit should be removed *)
   - apply NoDup_app. 
-  Set TC allow evar1.
-  Elpi Accumulate TC.Solver lp:{{
-    % print-goal.
-    % print-solution.
-  }}.
-  Elpi Accumulate TC.Solver lp:{{
-  :before "solve-aux-fail"
-  solve-aux G L :-
-    coq.option.get ["TC", "allow", "evar1"] (coq.option.bool tt), !,
-    coq.say "SEALING GOAL",
-    L = [seal G].
-}}.
-(* Elpi Typecheck TC.Solver. *)
-  Set TC allow evar1.
-  (* Elpi Override TC TC.Solver None. *)
-  (* Set Elpi Typeclasses Debug. *)
-  set_solver by eauto using NoDup_elements.
-  - admit.
+    (* TODO: @FissoreD all the goals below should be solved by 
+      set_solver by eauto using NoDup_elements. *)
+    repeat split.
+    -- set_unfold.
+      Set TC allow evar1.
+      naive_solver eauto using NoDup_elements. 
+      Unset TC allow evar1.
+    -- set_solver.
+    -- apply NoDup_elements.
   - set_solver.
-Admitted.
+Qed.
 Lemma elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.
 Proof.
   intros; apply NoDup_submseteq; eauto using NoDup_elements.
@@ -278,16 +273,11 @@ Proof. apply (wf_projected (<) size); auto using subset_size, lt_wf. Qed.
 
 Lemma aa: ∀ x X, (exists Q, SetUnfold (X ∖ {[x]} ⊂ X) Q).
 eexists.
-  (* TODO: @FissoreD, here TC.Solver should apply set_unfold_subset *)
+  (* TC.Solver should apply set_unfold_subset *)
   apply _.
-  (* apply set_unfold_subset. *)
-  (* * apply _. *)
-  (* * apply _. *)
-  (* Show Proof. *)
 Defined.
 
-(* TODO: @FissoreD, this is a check for the previous lemma *)
-Fail Check eq_refl : aa = fun _ _ => ex_intro _ _ (set_unfold_subset _ _ _ _ _ _).
+Check eq_refl : aa = fun _ _ => ex_intro _ _ (set_unfold_subset _ _ _ _ _ _).
 
 Lemma set_ind (P : C → Prop) :
   Proper ((≡) ==> impl) P →

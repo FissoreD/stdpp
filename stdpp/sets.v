@@ -5,6 +5,12 @@ From stdpp Require Export orders list list_numbers.
 From stdpp Require Import finite.
 From stdpp Require Import options.
 
+Elpi Accumulate  TC.Solver lp:{{
+  :before "coq-assign-evar-raw"
+  evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ 8 19 _, !,
+    hack-8-17.propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.
+}}.
+
 (* FIXME: This file needs a 'Proof Using' hint, but they need to be set
 locally (or things moved out of sections) as no default works well enough. *)
 Unset Default Proof Using.
@@ -657,41 +663,8 @@ Section semi_set.
   Section dec.
     Context `{!RelDecision (≡@{C})}.
 
-
-Elpi Accumulate  TC.Solver lp:{{
-  :before "coq-assign-evar-raw"
-  evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ 8 19 _,
-    coq.say {coq.term->string X}, fail, !,
-    hack-8-17.propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.
-}}.
-
-(* Elpi Query TC.Solver lp:{{
-  T = {{(not (forall (x : lp:A) (_ : lp:B), lp:A))}},
-  % hack-8-17.propagate-Prop-constraint-inward T,
-  coq.typecheck T {{Prop}} R, coq.say R.
-}}. *)
-
-    Elpi TC.Get_class_info SetUnfold.
-
-    Elpi Accumulate TC.Solver lp:{{
-      :after "999"
-      tc-stdpp.sets.tc-SetUnfold A B C :- coq.error A B C.
-    }}.
     Lemma set_subseteq_inv X Y : X ⊆ Y → X ⊂ Y ∨ X ≡ Y.
-    Proof. destruct (decide (X ≡ Y)); [by right|left].
-    assert (exists Z, SetUnfold (X ⊂ Y) Z).
-    - eexists.
-    Elpi Trace Browser.
-      apply _.
-      Show Proof.
-      (* Elpi Override TC TC.Solver None. *)
-    eapply set_unfold_1.
-  set_unfold.
-  try match goal with |- _ ∈ _ => apply dec_stable end;
-  naive_solver eauto.
-
-    
-    ;set_solver]. Qed.
+    Proof. destruct (decide (X ≡ Y)); [by right|left; set_solver]. Qed.
     Lemma set_not_subset_inv X Y : X ⊄ Y → X ⊈ Y ∨ X ≡ Y.
     Proof. destruct (decide (X ≡ Y)); [by right|left;set_solver]. Qed.
     Lemma non_empty_union X Y : X ∪ Y ≢ ∅ ↔ X ≢ ∅ ∨ Y ≢ ∅.

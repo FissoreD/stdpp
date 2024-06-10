@@ -1808,18 +1808,11 @@ Section map_filter.
     auto.
   Qed.
 
-  Elpi Accumulate TC.Solver lp:{{
-    tc-stdpp.base.tc-Decision (match X {{fun (_: prod lp:A lp:B) => Prop}} [B1]) S :-
-      coq.mk-app B1 [X] R,
-      F = app[{{@uncurry}},A,B,{{Prop}},R,X],
-      std.spy(tc-stdpp.base.tc-Decision F S).
-  }}.
   Goal ∀ (B: Type) (x : K * B) (f : B → A), Decision ((λ '(i, x0), P (i, f x0)) x).
-    intros.
-    Elpi Trace.
+    simpl. (* apply uncurry_dec. *)
     apply _.
+    Show Proof.
   Qed.
-
 
   Lemma map_filter_fmap {B} (f : B → A) (m : M B) :
     filter P (f <$> m) = f <$> filter (λ '(i, x), P (i, (f x))) m.
@@ -2480,6 +2473,26 @@ Section union_with.
 End union_with.
 
 (** ** Properties of the [union] operation *)
+
+Goal forall A, Empty (M A). apply _. Qed.
+Lemma XX: forall A, Union (M A). apply _. Defined.
+Goal ((@map_union M H4)) = XX. apply eq_refl. Qed.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-LeftId AA BB CC X SS :-
+    X = {{@union _ _}},
+    T = {{@union_with lp:A (M lp:A) (@map_union_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-LeftId AA BB CC T SS.
+  tc-stdpp.base.tc-RightId AA BB CC X SS :-
+    X = {{@union _ _}},
+    T = {{@union_with lp:A (M lp:A) (@map_union_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-RightId AA BB CC T SS.
+}}.
+Lemma XY A: @LeftId (M A) (@eq (M A)) (@empty (M A) (H1 A)) (@union (M A) (@map_union M H4 A)).
+  apply _.
+Qed.
 Global Instance map_empty_union {A} : LeftId (=@{M A}) ∅ (∪) := _.
 Global Instance map_union_empty {A} : RightId (=@{M A}) ∅ (∪) := _.
 Global Instance map_union_assoc {A} : Assoc (=@{M A}) (∪).
@@ -2980,6 +2993,20 @@ Section intersection_with.
   Proof. by intros; apply (partial_alter_merge _). Qed.
 End intersection_with.
 
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-LeftAbsorb AA BB CC X SS :-
+    X = {{@intersection _ _}},
+    T = {{@intersection_with lp:A (M lp:A) (@map_intersection_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-LeftAbsorb AA BB CC T SS.
+  tc-stdpp.base.tc-RightAbsorb AA BB CC X SS :-
+    X = {{@intersection _ _}},
+    T = {{@intersection_with lp:A (M lp:A) (@map_intersection_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-RightAbsorb AA BB CC T SS.
+}}.
+
 (** ** Properties of the [intersection] operation *)
 Global Instance map_empty_interaction {A} : LeftAbsorb (=@{M A}) ∅ (∩) := _.
 Global Instance map_interaction_empty {A} : RightAbsorb (=@{M A}) ∅ (∩) := _.
@@ -3049,6 +3076,21 @@ Proof.
   destruct (m1 !! i), (m2 !! i); compute; naive_solver.
 Qed.
 
+(* 
+1: looking for (Lookup ?K ?T@{l0:=@lookup ?K ?A (M A) ?Lookup0 i m2} (M A)) with backtracking
+1.1: simple apply H0 on
+(Lookup ?K ?T@{l0:=@lookup ?K ?A (M A) ?Lookup0 i m2} (M A)), 0 subgoal(s)
+*)
+
+Check _ : forall A, Lookup _ _ (M A).
+Goal forall A, Lookup K A (M A). apply _. Qed.
+Check _ : forall A, Difference (M A).
+Check _ : forall A, Lookup K _ (M A).
+
+(* TODO: @FissoreD non deterministic pruning, dalay to be implemented
+  it seems that I receive a goal already not in PF
+*)
+Elpi Override TC TC.Solver None.
 (** ** Properties of the [difference] operation *)
 Lemma lookup_difference {A} (m1 m2 : M A) i :
   (m1 ∖ m2) !! i = match m2 !! i with None => m1 !! i | _ => None end.
@@ -3056,6 +3098,9 @@ Proof.
   unfold difference, map_difference; rewrite lookup_difference_with.
   destruct (m1 !! i), (m2 !! i); done.
 Qed.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+
 Lemma lookup_difference_Some {A} (m1 m2 : M A) i x :
   (m1 ∖ m2) !! i = Some x ↔ m1 !! i = Some x ∧ m2 !! i = None.
 Proof. rewrite lookup_difference. destruct (m1 !! i), (m2 !! i); naive_solver. Qed.
@@ -3095,6 +3140,15 @@ Proof.
   apply map_empty; intros i. rewrite lookup_difference_None.
   destruct (m !! i); eauto.
 Qed.
+
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RightId AA BB CC X SS :-
+    X = {{@difference _ _}},
+    T = {{@merge M H4 lp:A2 lp:A2 lp:A2 lp:A1}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-RightId AA BB CC T SS.
+}}.
+
 Global Instance map_difference_right_id {A} : RightId (=@{M A}) ∅ (∖) := _.
 Lemma map_difference_empty {A} (m : M A) : m ∖ ∅ = m.
 Proof. by rewrite (right_id _ _). Qed.
@@ -3993,7 +4047,8 @@ Section preimg.
   Proof.
     split; [by eauto using lookup_preimg_None_1|].
     intros Hm. apply eq_None_not_Some; intros [X ?].
-    destruct (set_choose_L X) as [i ?].
+    (* @FissoreD Here an example motivating hypothesis revert to get correct instance order *)
+    - destruct (set_choose_L X) as [i ?].
     { intros ->. by eapply lookup_preimg_Some_non_empty. }
     by eapply (Hm i), lookup_preimg_Some_1.
   Qed.
@@ -4011,15 +4066,58 @@ Section preimg.
         apply (lookup_preimg_None_1 _ _ j) in HX'. naive_solver.
   Qed.
 
+  Elpi Accumulate TC.Solver lp:{{
+    print-goal. print-solution.
+  }}.
+
+  Elpi Accumulate TC.Solver lp:{{
+    :after "0" :name "remove4" solve-aux(goal _ _ {{@ElemOf _ lp:A1}} _ _ as A) [seal A] :-
+        var A1, !.
+  }}.
+  (* TODO: @FissoreD infinite loop *)
+  Elpi Override TC TC.Solver None.
   Lemma lookup_total_preimg m x i :
     i ∈ map_preimg m !!! x ↔ m !! i = Some x.
+
+(* 
+  1: looking for (ElemOf ?A ?B) with backtracking
+2: looking for (LookupTotal ?A0 ?B (MA SK)) with backtracking
+2.1: simple apply @map_lookup_total on
+(LookupTotal ?A0 ?B (MA SK)), 2 subgoal(s)
+2.1-1 : (Lookup ?A0 SK (MA SK))
+2.1-1: looking for (Lookup ?A0 SK (MA SK)) with backtracking
+2.1-1.1: simple apply H8 on (Lookup ?A0 SK (MA SK)), 0 subgoal(s)
+2.1-2 : (Inhabited SK)
+2.1-2: looking for (Inhabited SK) without backtracking
+2.1-2.1: simple apply @empty_inhabited on (Inhabited SK), 1 subgoal(s)
+2.1-2.1-1 : (Empty SK)
+2.1-2.1-1: looking for (Empty SK) without backtracking
+2.1-2.1-1.1: exact H16 on (Empty SK), 0 subgoal(s)
+3: looking for (MapFold K A (MK A)) without backtracking
+3.1: simple apply H5 on (MapFold K A (MK A)), 0 subgoal(s)
+4: looking for (Empty (MA SK)) without backtracking
+4.1: simple apply H9 on (Empty (MA SK)), 0 subgoal(s)
+5: looking for (PartialAlter A SK (MA SK)) without backtracking
+5.1: simple apply H10 on (PartialAlter A SK (MA SK)), 0 subgoal(s)
+6: looking for (Empty SK) without backtracking
+6.1: exact H16 on (Empty SK), 0 subgoal(s)
+7: looking for (Singleton K SK) without backtracking
+7.1: exact H17 on (Singleton K SK), 0 subgoal(s)
+8: looking for (Union SK) without backtracking
+8.1: exact H18 on (Union SK), 0 subgoal(s)
+9: looking for (Lookup ?A A (MK A)) with backtracking
+9.1: simple apply H0 on (Lookup ?A A (MK A)), 0 subgoal(s)
+1: looking for (ElemOf K SK) without backtracking
+1.1: exact H15 on (ElemOf K SK), 0 subgoal(s)
+*)
   Proof.
     rewrite lookup_total_alt. destruct (map_preimg m !! x) as [X|] eqn:HX.
     - by apply lookup_preimg_Some.
     - rewrite lookup_preimg_None in HX. set_solver.
   Qed.
 End preimg.
-
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
 (** ** The [map_img] (image/codomain) operation *)
 Section img.
@@ -4174,6 +4272,15 @@ Section img.
     ∃ m1 m2, m = m1 ∪ m2 ∧ m1 ##ₘ m2 ∧ map_img m1 ≡ X ∧ map_img m2 ≡ Y.
   Proof.
     intros Hsep Himg.
+    Check _ : Filter (_ * _) (M A).
+    Elpi Accumulate TC.Solver lp:{{
+      tc-stdpp.base.tc-Decision X S :-
+        X = (match _ _ _),
+        Y = {{@uncurry _ _ _ _ _}},
+        coq.unify-eq X Y ok,
+        tc-stdpp.base.tc-Decision Y S.
+    }}.
+    Check _ : (∀ x : K * A, Decision ((λ '(_, x0), x0 ∈ X) x)).
     exists (filter (λ '(_,x), x ∈ X) m), (filter (λ '(_,x), x ∉ X) m).
     assert (filter (λ '(_,x), x ∈ X) m ##ₘ filter (λ '(_,x), x ∉ X) m).
     { apply map_disjoint_filter_complement. }
@@ -4342,6 +4449,11 @@ Section map_compose.
   Lemma map_compose_as_omap m n : m ∘ₘ n = omap (m !!.) n.
   Proof. done. Qed.
 
+  (* TODO: @FissoreD: 
+    A problem to convert coq term to elpi
+    Anomaly "File "src/coq_elpi_HOAS.ml", line 1300, characters 12-18: Assertion failed." *)
+
+  Elpi Override TC TC.Solver None.
   (** Alternative definition of [m ∘ₘ n] by recursion on [n] *)
   Lemma map_compose_as_fold m n :
     m ∘ₘ n = map_fold (λ a b,
@@ -4357,20 +4469,27 @@ Section map_compose.
     by apply delete_notin, map_lookup_compose_None_2_1.
   Qed.
 
+
+  (* TODO: @FissoreD: error Unable to satisfy the following constraints: *)
   Lemma map_compose_min_l `{SemiSet B D, !RelDecision (∈@{D})} m n :
     m ∘ₘ n = filter (λ '(b,_), b ∈ map_img (SA:=D) n) m ∘ₘ n.
   Proof.
+    (* λ (x : B) (_ : C), Is_true_dec (map_img n) *)
+    (* Check _ : (∀ x : B, C → Decision (x ∈ map_img n)). *)
     apply map_eq; intros a. rewrite !map_lookup_compose.
     destruct (n !! a) as [b|] eqn:?; simpl; [|done].
     rewrite map_lookup_filter. destruct (m !! b) eqn:?; simpl; [|done].
     by rewrite option_guard_True by (by eapply elem_of_map_img_2).
   Qed.
+  
   Lemma map_compose_min_r m n :
     m ∘ₘ n = m ∘ₘ filter (λ '(_,b), is_Some (m !! b)) n.
   Proof.
     apply map_eq; intros a. rewrite !map_lookup_compose, map_lookup_filter.
     destruct (n !! a) as [b|] eqn:?; simpl; [|done]. by destruct (m !! b) eqn:?.
   Qed.
+  Elpi Override TC TC.Solver All.
+  Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
   Lemma map_compose_insert_Some m n a b c :
     m !! b = Some c →

@@ -80,6 +80,17 @@ Section coGset.
   Qed.
 End coGset.
 
+Goal  
+  forall A (EqDecision0: EqDecision A) (H : Countable A), 
+    (@RelDecision A (@gset A EqDecision0 H)
+	              (@elem_of A (@gset A EqDecision0 H)
+                     (@elem_of A (@gset A EqDecision0 H)
+                        (@gset_elem_of A EqDecision0 H)))).
+Proof.
+  (* TODO: @FissoreD this should pass *)
+  Fail apply _.
+Abort.
+Elpi Override TC TC.Solver None.
 Global Instance coGset_elem_of_dec `{Countable A} : RelDecision (∈@{coGset A}) :=
   λ x X,
   match X with
@@ -90,6 +101,7 @@ Global Instance coGset_elem_of_dec `{Countable A} : RelDecision (∈@{coGset A})
 Section infinite.
   Context `{Countable A, Infinite A}.
 
+  (* TODO: @FissoreD Here infine loop *)
   Global Instance coGset_leibniz : LeibnizEquiv (coGset A).
   Proof.
     intros [X|X] [Y|Y]; rewrite set_equiv;
@@ -100,17 +112,18 @@ Section infinite.
     - f_equal. apply leibniz_equiv; intros x. by apply not_elem_of_iff.
   Qed.
 
+  (* TODO: @FissoreD Here infine loop *)
   Global Instance coGset_equiv_dec : RelDecision (≡@{coGset A}).
   Proof.
     refine (λ X Y, cast_if (decide (X = Y))); abstract (by fold_leibniz).
   Defined.
-
   Global Instance coGset_disjoint_dec : RelDecision (##@{coGset A}).
   Proof.
     refine (λ X Y, cast_if (decide (X ∩ Y = ∅)));
       abstract (by rewrite disjoint_intersection_L).
   Defined.
 
+  (* TODO: @FissoreD here infinite loop *)
   Global Instance coGset_subseteq_dec : RelDecision (⊆@{coGset A}).
   Proof.
     refine (λ X Y, cast_if (decide (X ∪ Y = Y)));
@@ -194,3 +207,5 @@ Proof. destruct X; set_solver. Qed.
 
 Global Typeclasses Opaque coGset_elem_of coGset_empty coGset_top coGset_singleton.
 Global Typeclasses Opaque coGset_union coGset_intersection coGset_difference.
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.

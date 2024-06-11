@@ -123,18 +123,12 @@ Proof.
     rewrite <-IH. done.
 Qed.
 
+(* NOTE: @FissoreD This instance is polymorphic therefore, should be compiled accordingly *)
 Global Instance tele_fmap {TT : tele} : FMap (tele_fun TT) := λ T U, tele_map.
 
-Elpi Override TC TC.Solver None.
-(* TODO: @FissoreD error:
-Universe polymorphic gref tele_fmap used with the 'global' term constructor  
-from coq_elpi_HOAS r 587
-*)
 Lemma tele_fmap_app {T U} {TT : tele} (F : T → U) (t : TT -t> T) (x : TT) :
   (F <$> t) x = F (t x).
 Proof. apply tele_map_app. Qed.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
 (** Operate below [tele_fun]s with argument telescope [TT]. *)
 Fixpoint tele_bind {U} {TT : tele} : (TT → U) → TT -t> U :=

@@ -811,3 +811,10 @@ Global Typeclasses Opaque gset.
 Elpi Override TC TC.Solver All.
 Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
+Elpi Accumulate TC.Solver lp:{{
+  tc-stdpp.base.tc-RelDecision A B C S :-
+    C = {{@elem_of _ _ (@elem_of _ _ _)}}, !,
+    D = {{@elem_of _ _ (@gset_elem_of _ _ _)}},
+    coq.unify-eq C D ok,
+    tc-stdpp.base.tc-RelDecision A B D S.
+}}.

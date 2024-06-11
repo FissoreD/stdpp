@@ -86,11 +86,7 @@ Goal
 	              (@elem_of A (@gset A EqDecision0 H)
                      (@elem_of A (@gset A EqDecision0 H)
                         (@gset_elem_of A EqDecision0 H)))).
-Proof.
-  (* TODO: @FissoreD this should pass *)
-  Fail apply _.
-Abort.
-Elpi Override TC TC.Solver None.
+Proof. apply _. Qed.
 Global Instance coGset_elem_of_dec `{Countable A} : RelDecision (∈@{coGset A}) :=
   λ x X,
   match X with
@@ -100,7 +96,8 @@ Global Instance coGset_elem_of_dec `{Countable A} : RelDecision (∈@{coGset A})
 
 Section infinite.
   Context `{Countable A, Infinite A}.
-
+  Elpi Override TC TC.Solver None.
+  (* Set Elpi Typeclasses Debug. *)
   (* TODO: @FissoreD Here infine loop *)
   Global Instance coGset_leibniz : LeibnizEquiv (coGset A).
   Proof.

@@ -253,6 +253,7 @@ Proof. apply TCEq_eq. Qed.
 
 Inductive TCDiag {A} (C : A → Prop) : A → A → Prop :=
   | TCDiag_diag x : C x → TCDiag C x x.
+(* TODO: @FissoreD this class has two modes... *)
 (*TC.Pending_mode ! ! - -.*)
 Existing Class TCDiag.
 Global Existing Instance TCDiag_diag.
@@ -309,7 +310,7 @@ Proof. split; repeat intro; congruence. Qed.
 (** We define an operational type class for setoid equality, i.e., the
 "canonical" equivalence for a type. The typeclass is tied to the \equiv
 symbol. This is based on (Spitters/van der Weegen, 2011). *)
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class Equiv A := equiv: relation A.
 Global Hint Mode Equiv ! : typeclass_instances. (*Mode also added in elpi*)
 

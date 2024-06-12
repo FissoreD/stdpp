@@ -4066,15 +4066,7 @@ Section preimg.
         apply (lookup_preimg_None_1 _ _ j) in HX'. naive_solver.
   Qed.
 
-  Elpi Accumulate TC.Solver lp:{{
-    print-goal. print-solution.
-  }}.
 
-  Elpi Accumulate TC.Solver lp:{{
-    :after "0" :name "remove4" solve-aux(goal _ _ {{@ElemOf _ lp:A1}} _ _ as A) [seal A] :-
-        var A1, !.
-  }}.
-  (* TODO: @FissoreD infinite loop *)
   Elpi Override TC TC.Solver None.
   Lemma lookup_total_preimg m x i :
     i ∈ map_preimg m !!! x ↔ m !! i = Some x.

@@ -7,12 +7,6 @@ From stdpp Require Import options.
 (* Pick up extra assumptions from section parameters. *)
 Set Default Proof Using "Type*".
 
-(* TODO: @FissoreD Here the goal should be shelved instead of failing *)
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove" solve-aux(goal _ _ {{@ElemOf lp:A1 lp:A2}} _ _ as A) [seal A] :-
-  var A1, var A2, !.
-}}.
-
 Class FinMapDom K M D `{∀ A, Dom (M A) D, FMap M,
     ∀ A, Lookup K A (M A), ∀ A, Empty (M A), ∀ A, PartialAlter K A (M A),
     OMap M, Merge M, ∀ A, MapFold K A (M A), EqDecision K,
@@ -30,20 +24,9 @@ Lemma lookup_lookup_total_dom `{!Inhabited A} (m : M A) i :
   i ∈ dom m → m !! i = Some (m !!! i).
 Proof. rewrite elem_of_dom. apply lookup_lookup_total. Qed.
 
-Elpi Accumulate TC.Solver lp:{{
-  :replace "remove" dummy.
-}}.
-
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove1" solve-aux(goal _ _ {{@SubsetEq lp:A1}} _ _ as A) [seal A] :-
-  var A1, !.
-}}.
 Lemma dom_imap_subseteq {A B} (f: K → A → option B) (m: M A) :
   dom (map_imap f m) ⊆ dom m.
 Proof.
-  Elpi Accumulate TC.Solver lp:{{
-    :replace "remove1" dummy.
-  }}.
   intros k. rewrite 2!elem_of_dom, map_lookup_imap.
   destruct 1 as [?[?[Eq _]]%bind_Some]. by eexists.
 Qed.
@@ -55,10 +38,6 @@ Proof.
   unfold is_Some. setoid_rewrite bind_Some. naive_solver.
 Qed.
 
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove3" solve-aux(goal _ _ {{@ElemOf lp:A1 lp:A2}} _ _ as A) [seal A] :-
-  var A2, !.
-}}.
 Lemma elem_of_dom_2 {A} (m : M A) i x : m !! i = Some x → i ∈ dom m.
 Proof. rewrite elem_of_dom; eauto. Qed.
 Lemma not_elem_of_dom {A} (m : M A) i : i ∉ dom m ↔ m !! i = None.
@@ -67,10 +46,6 @@ Lemma not_elem_of_dom_1 {A} (m : M A) i : i ∉ dom m → m !! i = None.
 Proof. apply not_elem_of_dom. Qed.
 Lemma not_elem_of_dom_2 {A} (m : M A) i : m !! i = None → i ∉ dom m.
 Proof. apply not_elem_of_dom. Qed.
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove3" solve-aux(goal _ _ {{@SubsetEq lp:A1}} _ _ as A) [seal A] :-
-  var A1, !.
-}}.
 Lemma subseteq_dom {A} (m1 m2 : M A) : m1 ⊆ m2 → dom m1 ⊆ dom m2.
 Proof.
   rewrite map_subseteq_spec.
@@ -94,13 +69,6 @@ Qed.
 Lemma dom_filter_subseteq {A} (P : K * A → Prop) `{!∀ x, Decision (P x)} (m : M A):
   dom (filter P m) ⊆ dom m.
 Proof. apply subseteq_dom, map_filter_subseteq. Qed.
-
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove4" solve-aux(goal _ _ {{@Equiv lp:A1}} _ _ as A) [seal A] :-
-  var A1, !.
-  :after "0" :name "remove5" solve-aux(goal _ _ {{@Filter _ lp:A1}} _ _ as A) [seal A] :-
-  var A1, !.
-}}.
 
 Lemma filter_dom {A} `{!Elements K D, !FinSet K D}
     (P : K → Prop) `{!∀ x, Decision (P x)} (m : M A) :
@@ -305,11 +273,6 @@ Proof.
       naive_solver.
 Qed.
 
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove4" solve-aux(goal _ _ {{@Elements _ lp:A1}} _ _ as A) [seal A] :-
-      var A1, !.
-}}.
-
 Lemma dom_kmap `{!Elements K D, !FinSet K D, FinMapDom K2 M2 D2}
     {A} (f : K → K2) `{!Inj (=) (=) f} (m : M A) :
   dom (kmap (M2:=M2) f m) ≡@{D2} set_map f (dom m).
@@ -471,10 +434,6 @@ Global Instance set_unfold_dom_fmap {A B} (f : A → B) i (m : M A) Q :
 Proof. constructor. by rewrite dom_fmap, (set_unfold_elem_of _ (dom _) _). Qed.
 End fin_map_dom.
 
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove4" solve-aux(goal _ _ {{@Equiv lp:A1}} _ _ as A) [seal A] :-
-  var A1, !.
-}}.
 Lemma dom_seq `{FinMapDom nat M D} {A} start (xs : list A) :
   dom (map_seq start (M:=M A) xs) ≡ set_seq start (length xs).
 Proof.
@@ -486,10 +445,6 @@ Lemma dom_seq_L `{FinMapDom nat M D, !LeibnizEquiv D} {A} start (xs : list A) :
   dom (map_seq (M:=M A) start xs) = set_seq start (length xs).
 Proof. unfold_leibniz. apply dom_seq. Qed.
 
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" :name "remove4" solve-aux(goal _ _ {{@ElemOf _ lp:A1}} _ _ as A) [seal A] :-
-  var A1, !.
-}}.
 Global Instance set_unfold_dom_seq `{FinMapDom nat M D} {A} start (xs : list A) i :
   SetUnfoldElemOf i (dom (map_seq start (M:=M A) xs)) (start ≤ i < start + length xs).
 Proof. constructor. by rewrite dom_seq, elem_of_set_seq. Qed.

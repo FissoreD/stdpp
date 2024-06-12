@@ -596,12 +596,6 @@ Section curry_uncurry.
     - by rewrite !lookup_insert_ne, IH', lookup_insert_ne by congruence.
   Qed.
 
-  Elpi Accumulate TC.Solver lp:{{
-    :after "0" :name "remove4" solve-aux(goal _ _ {{@Lookup _ _ lp:A1}} _ _ as A) [seal A] :-
-      if print-solution (coq.say "Sealing the goal") true,
-      var A1, !.
-  }}.
-
   Lemma lookup_gmap_curry (m : gmap (K1 * K2) A) i j :
     gmap_curry m !! i ≫= (.!! j) = m !! (i, j).
   Proof.
@@ -649,12 +643,8 @@ Section curry_uncurry.
     intros Hne. apply map_eq; intros i. destruct (m !! i) as [m2|] eqn:Hm.
     - destruct (gmap_curry (gmap_uncurry m) !! i) as [m2'|] eqn:Hcurry.
       + f_equal. apply map_eq. intros j.
-        Elpi Override TC TC.Solver None.
-        (* TODO: @FissoreD Unification problem *)
         trans (gmap_curry (gmap_uncurry m) !! i ≫= (.!! j)).
         { by rewrite Hcurry. }
-        Elpi Override TC TC.Solver All.
-        Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
         by rewrite lookup_gmap_curry, lookup_gmap_uncurry, Hm.
       + rewrite lookup_gmap_curry_None in Hcurry.
         exfalso; apply (Hne i m2), map_eq; [done|intros j].

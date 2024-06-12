@@ -15,12 +15,6 @@ Elpi Accumulate  TC.Solver lp:{{
 locally (or things moved out of sections) as no default works well enough. *)
 Unset Default Proof Using.
 
-(* Elpi Accumulate  TC.Solver lp:{{
-  :before "coq-assign-evar-raw"
-  evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ 8 19 _, !,
-    hack-8-17.propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.
-}}. *)
-
 (* Higher precedence to make sure these instances are not used for other types
 with an [ElemOf] instance, such as lists. *)
 Global Instance set_equiv_instance `{ElemOf A C} : Equiv C | 20 := λ X Y,
@@ -370,35 +364,6 @@ Tactic Notation "set_solver" "+" hyp_list(Hs) := clear -Hs; set_solver.
 Global Hint Extern 1000 (_ ∉ _) => set_solver : set_solver.
 Global Hint Extern 1000 (_ ∈ _) => set_solver : set_solver.
 Global Hint Extern 1000 (_ ⊆ _) => set_solver : set_solver.
-
-(* Elpi Accumulate tc.db lp:{{
-
-  % shorten tc-sets.{tc-SetUnfold}.
-  shorten tc-stdpp.sets.{tc-SetUnfold}.
-
-  :after "1"
-  tc-SetUnfold {{ forall x : lp:A, lp:(P x) }} {{ forall x : lp:A, lp:(Q x) }}
-                      {{ @set_unfold_forall lp:A lp:P' lp:Q' lp:R' }} :-
-  (pi x\ occurs x (P x)), !,
-  std.do! [
-    (@pi-decl `x` A x\ tc-SetUnfold (P x) (Q x) (R x)),
-    P' = {{ fun x : lp:A => lp:(P x) }},
-    Q' = {{ fun x : lp:A => lp:(Q x) }},
-    R' = {{ fun x : lp:A => lp:(R x) }},
-  ].
-
-  :after "0"
-  tc-SetUnfold {{ exists x : lp:A, lp:(P x) }} {{ exists x : lp:A, lp:(Q x) }}
-                      {{ @set_unfold_exist lp:A lp:P' lp:Q' lp:R' }} :-
-  (pi x\ occurs x (P x)), !,
-  std.do! [
-    (@pi-decl `x` A x\ tc-SetUnfold (P x) (Q x) (R x)),
-    P' = {{ fun x : lp:A => lp:(P x) }},
-    Q' = {{ fun x : lp:A => lp:(Q x) }},
-    R' = {{ fun x : lp:A => lp:(R x) }},
-  ].
-
-}}. *)
 
 Elpi TC.AddInstances 0 set_unfold_and.
 Elpi TC.AddInstances 0 set_unfold_iff.

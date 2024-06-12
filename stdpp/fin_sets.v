@@ -13,11 +13,6 @@ Elpi Query lp:{{
   coq.option.add ["TC", "allow", "evar1"] (coq.option.bool ff) ff.
 }}.
 
-Elpi Accumulate TC.Solver lp:{{
-  :after "0" solve-aux G [seal G] :- 
-    coq.option.get ["TC","allow","evar1"] (coq.option.bool tt), !.
-}}.
-
 (** Operations *)
 Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
 Global Typeclasses Opaque set_size.
@@ -130,16 +125,7 @@ Lemma elements_disj_union (X Y : C) :
 Proof.
   intros HXY. apply NoDup_Permutation.
   - apply NoDup_elements.
-  - apply NoDup_app. 
-    (* TODO: @FissoreD all the goals below should be solved by 
-      set_solver by eauto using NoDup_elements. *)
-    repeat split.
-    -- set_unfold.
-      Set TC allow evar1.
-      naive_solver eauto using NoDup_elements. 
-      Unset TC allow evar1.
-    -- set_solver.
-    -- apply NoDup_elements.
+  - apply NoDup_app; set_solver by eauto using NoDup_elements.
   - set_solver.
 Qed.
 Lemma elements_submseteq X Y : X ⊆ Y → elements X ⊆+ elements Y.

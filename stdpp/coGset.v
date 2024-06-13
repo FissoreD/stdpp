@@ -97,11 +97,9 @@ Global Instance coGset_elem_of_dec `{Countable A} : RelDecision (∈@{coGset A})
 Section infinite.
   Context `{Countable A, Infinite A}.
 
-  (* TODO: @FissoreD Here the infinite loop due to llam links not awaken *)
-  (* Elpi Bound Steps 3000. *)
-  (* Elpi Trace Browser. *)
-  (* Check _ : Equiv (coGset A). *)
-  Elpi Override TC TC.Solver None.
+  (* OLD: Infinite loop due to llam *)
+  Goal Equiv (coGset A). apply _. Qed.
+  (* OLD: Infinite loop due to llam *)
   Global Instance coGset_leibniz : LeibnizEquiv (coGset A).
   Proof.
     intros [X|X] [Y|Y]; rewrite set_equiv;
@@ -112,7 +110,7 @@ Section infinite.
     - f_equal. apply leibniz_equiv; intros x. by apply not_elem_of_iff.
   Qed.
 
-  (* TODO: @FissoreD Here infine loop *)
+  (* OLD: Infinite loop due to llam *)
   Global Instance coGset_equiv_dec : RelDecision (≡@{coGset A}).
   Proof.
     refine (λ X Y, cast_if (decide (X = Y))); abstract (by fold_leibniz).
@@ -123,7 +121,7 @@ Section infinite.
       abstract (by rewrite disjoint_intersection_L).
   Defined.
 
-  (* TODO: @FissoreD here infinite loop *)
+  (* OLD: Infinite loop due to llam *)
   Global Instance coGset_subseteq_dec : RelDecision (⊆@{coGset A}).
   Proof.
     refine (λ X Y, cast_if (decide (X ∪ Y = Y)));

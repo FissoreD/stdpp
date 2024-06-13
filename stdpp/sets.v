@@ -963,6 +963,9 @@ Global Typeclasses Opaque set_mfail.
 Section set_monad_base.
   Context `{MonadSet M}.
 
+  Goal forall x, @SemiSet x (M x) (H x) (H0 x) (H1 x) (H2 x).
+    apply _. Qed.
+
   Lemma elem_of_mfail {A} x : x ∈@{M A} mfail ↔ False.
   Proof. unfold mfail, set_mfail. by rewrite elem_of_empty. Qed.
 

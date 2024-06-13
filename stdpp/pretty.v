@@ -103,14 +103,21 @@ Proof.
   rewrite (N.div_mod x 10), (N.div_mod y 10) by done. lia.
 Qed.
 
-Elpi Override TC TC.Solver None.
 Global Instance pretty_nat : Pretty nat := λ x, pretty (N.of_nat x).
 Global Instance pretty_nat_inj : Inj (=@{nat}) (=) pretty.
-Proof. apply _. Qed.
+Proof.
+  (* TODO: @FissoreD unification problems *)
+  Elpi Override TC TC.Solver None. (* Unifcation *)
+  (* apply (compose_inj eq eq eq N.of_nat pretty Nat2N.inj' pretty_N_inj). *)
+  apply _.
+Qed.
 
 Global Instance pretty_positive : Pretty positive := λ x, pretty (Npos x).
 Global Instance pretty_positive_inj : Inj (=@{positive}) (=) pretty.
 Proof. apply _. Qed.
+
+Elpi Override TC TC.Solver All.
+Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
 Global Instance pretty_Z : Pretty Z := λ x,
   match x with
@@ -125,6 +132,4 @@ Proof.
   - by edestruct (pretty_N_go_ne_dash (N.pos x) "").
   - by edestruct (pretty_N_go_ne_dash (N.pos y) "").
 Qed.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 

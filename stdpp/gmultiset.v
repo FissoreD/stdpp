@@ -85,7 +85,8 @@ Section basic_lemmas.
     Check _ : Merge (gmap A).
     Check _ : ∀ A0 : Type, MapFold A A0 (gmap A A0).
     Check _ : EqDecision A.
-    Elpi Override TC TC.Solver None.
+    (* TODO: @FissoreD unification problem *)
+    Elpi Override TC TC.Solver None. (* Unification *)
     apply map_eq; intros x.
     specialize (HXY x); unfold multiplicity in *; simpl in *.
     repeat case_match; naive_solver lia.
@@ -258,8 +259,7 @@ Section multiset_unfold.
     (∀ x, MultisetUnfold x X (f x)) → (∀ x, MultisetUnfold x Y (g x)) →
     SetUnfold (X = Y) (∀ x, f x = g x) | 0.
   Proof. constructor.
-    Elpi Override TC TC.Solver None.
-    (* TODO: @FissoreD Here infinite loop *)
+    (* OLD: @FissoreD Here infinite loop *)
     unfold_leibniz. by apply set_unfold_multiset_equiv. Qed.
   Elpi Override TC TC.Solver All.
   Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
@@ -504,7 +504,7 @@ Section more_lemmas.
     Proper ((≡ₚ) ==> (=)) (list_to_set_disj (C:=gmultiset A)).
   Proof. induction 1; multiset_solver. Qed.
 
-  Elpi Override TC TC.Solver None.
+  Elpi Override TC TC.Solver None. (* Unification *)
   (* TODO: @FissoreD here unification problem *)
 
   (** Properties of the elements operation *)

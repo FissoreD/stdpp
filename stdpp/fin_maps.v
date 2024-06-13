@@ -3090,7 +3090,7 @@ Check _ : forall A, Lookup K _ (M A).
 (* TODO: @FissoreD non deterministic pruning, dalay to be implemented
   it seems that I receive a goal already not in PF
 *)
-Elpi Override TC TC.Solver None.
+Elpi Override TC TC.Solver None. (* @gares *)
 (** ** Properties of the [difference] operation *)
 Lemma lookup_difference {A} (m1 m2 : M A) i :
   (m1 ∖ m2) !! i = match m2 !! i with None => m1 !! i | _ => None end.
@@ -4067,49 +4067,15 @@ Section preimg.
   Qed.
 
 
-  Elpi Override TC TC.Solver None.
+  (* OLD: infinite loop. *)
   Lemma lookup_total_preimg m x i :
-    i ∈ map_preimg m !!! x ↔ m !! i = Some x.
-
-(* 
-  1: looking for (ElemOf ?A ?B) with backtracking
-2: looking for (LookupTotal ?A0 ?B (MA SK)) with backtracking
-2.1: simple apply @map_lookup_total on
-(LookupTotal ?A0 ?B (MA SK)), 2 subgoal(s)
-2.1-1 : (Lookup ?A0 SK (MA SK))
-2.1-1: looking for (Lookup ?A0 SK (MA SK)) with backtracking
-2.1-1.1: simple apply H8 on (Lookup ?A0 SK (MA SK)), 0 subgoal(s)
-2.1-2 : (Inhabited SK)
-2.1-2: looking for (Inhabited SK) without backtracking
-2.1-2.1: simple apply @empty_inhabited on (Inhabited SK), 1 subgoal(s)
-2.1-2.1-1 : (Empty SK)
-2.1-2.1-1: looking for (Empty SK) without backtracking
-2.1-2.1-1.1: exact H16 on (Empty SK), 0 subgoal(s)
-3: looking for (MapFold K A (MK A)) without backtracking
-3.1: simple apply H5 on (MapFold K A (MK A)), 0 subgoal(s)
-4: looking for (Empty (MA SK)) without backtracking
-4.1: simple apply H9 on (Empty (MA SK)), 0 subgoal(s)
-5: looking for (PartialAlter A SK (MA SK)) without backtracking
-5.1: simple apply H10 on (PartialAlter A SK (MA SK)), 0 subgoal(s)
-6: looking for (Empty SK) without backtracking
-6.1: exact H16 on (Empty SK), 0 subgoal(s)
-7: looking for (Singleton K SK) without backtracking
-7.1: exact H17 on (Singleton K SK), 0 subgoal(s)
-8: looking for (Union SK) without backtracking
-8.1: exact H18 on (Union SK), 0 subgoal(s)
-9: looking for (Lookup ?A A (MK A)) with backtracking
-9.1: simple apply H0 on (Lookup ?A A (MK A)), 0 subgoal(s)
-1: looking for (ElemOf K SK) without backtracking
-1.1: exact H15 on (ElemOf K SK), 0 subgoal(s)
-*)
-  Proof.
+     i ∈ map_preimg m !!! x ↔ m !! i = Some x.
+ Proof.
     rewrite lookup_total_alt. destruct (map_preimg m !! x) as [X|] eqn:HX.
     - by apply lookup_preimg_Some.
     - rewrite lookup_preimg_None in HX. set_solver.
   Qed.
 End preimg.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
 (** ** The [map_img] (image/codomain) operation *)
 Section img.
@@ -4445,7 +4411,7 @@ Section map_compose.
     A problem to convert coq term to elpi
     Anomaly "File "src/coq_elpi_HOAS.ml", line 1300, characters 12-18: Assertion failed." *)
 
-  Elpi Override TC TC.Solver None.
+  Elpi Override TC TC.Solver None. (*@gares *)
   (** Alternative definition of [m ∘ₘ n] by recursion on [n] *)
   Lemma map_compose_as_fold m n :
     m ∘ₘ n = map_fold (λ a b,

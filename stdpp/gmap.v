@@ -668,7 +668,7 @@ Section gset.
   Context `{Countable K}.
   (* Lift instances of operational TCs from [mapset] and mark them [simpl never]. *)
   Global Instance gset_elem_of: ElemOf K (gset K) := _.
-  Elpi Override TC TC.Solver None.
+  Elpi Override TC TC.Solver None. (* Unification *)
   Global Instance gset_empty : Empty (gset K) := _.
   Global Instance gset_singleton : Singleton K (gset K) := _.
   Global Instance gset_union: Union (gset K) := _.

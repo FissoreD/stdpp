@@ -193,8 +193,7 @@ Qed.
 Local Definition coPset_top_subseteq := top_subseteq (C:=coPset).
 Global Hint Resolve coPset_top_subseteq : core.
 
-(* TODO: @FissoreD Here infinite loop *)
-Elpi Override TC TC.Solver None.
+(* OLD: Infinite loop due to llam *)
 Global Instance coPset_leibniz : LeibnizEquiv coPset.
 Proof.
   intros X Y; rewrite set_equiv; intros HXY.
@@ -202,6 +201,7 @@ Proof.
   intros p; apply eq_bool_prop_intro, (HXY p).
 Qed.
 
+Elpi Override TC TC.Solver None. (* Unification *)
 Global Instance coPset_elem_of_dec : RelDecision (∈@{coPset}).
 Proof. solve_decision. Defined.
 Global Instance coPset_equiv_dec : RelDecision (≡@{coPset}).

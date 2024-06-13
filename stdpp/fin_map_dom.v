@@ -293,7 +293,7 @@ Lemma map_compose_dom_subseteq {C} `{FinMap K' M'} (m: M' C) (n : M K') :
   dom (m ∘ₘ n : M C) ⊆@{D} dom n.
 Proof. apply dom_omap_subseteq. Qed.
 
-Elpi Override TC TC.Solver None.
+Elpi Override TC TC.Solver None. (* Unification *)
 (* TODO: @FissoreD Unification problems *)
 Lemma map_compose_min_r_dom {C} `{FinMap K' M', !RelDecision (∈@{D})}
     (m : M C) (n : M' K) :

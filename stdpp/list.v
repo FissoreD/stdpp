@@ -21,7 +21,7 @@ Notation tail := tl.
 Notation take := firstn.
 Notation drop := skipn.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-RelDecision A B {{le}} S :-
     tc-stdpp.base.tc-RelDecision A B {{Nat.le}} S.
   tc-stdpp.base.tc-Inj A B C D {{S}} S :-
@@ -3976,7 +3976,7 @@ Section find.
          intros k z' [(->&->&?)|[??]]%list_lookup_insert_Some; eauto with lia.
   Qed.
 
-  Elpi Accumulate TC.Solver lp:{{
+  Elpi Accumulate TC.Solver lp:{{ % unif
     % Manual unfold of compose
     tc-stdpp.base.tc-Decision (app [{{@compose}},_,_,_,F1,F2,X]) S :-
       tc-stdpp.base.tc-Decision (app[F1,app[F2, X]]) S.

@@ -69,7 +69,7 @@ Notation "x ≤ y ≤ z ≤ z'" := (x ≤ y ∧ y ≤ z ∧ z ≤ z')%nat : nat_
 Notation "(≤)" := le (only parsing) : nat_scope.
 Notation "(<)" := lt (only parsing) : nat_scope.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-ProofIrrel X S :-
     Y = {{Z.lt _ _}},
     coq.unify-eq X Y ok,
@@ -1226,7 +1226,7 @@ Module Qp.
   Lemma three_quarter_quarter : 3 / 4 + 1 / 4 = 1.
   Proof. compute_done. Qed.
 
-  Elpi Accumulate TC.Solver lp:{{
+  Elpi Accumulate TC.Solver lp:{{ % unif
     tc-stdpp.base.tc-Inj A B R1 R3 F S :- 
       F = (fun _ _ _), !,
       G = {{ compose _ _}},
@@ -1568,7 +1568,7 @@ Lemma rotate_nat_add_add_mod base offset len:
   rotate_nat_add (base `mod` len) offset len.
 Proof. unfold rotate_nat_add. by rewrite Nat2Z.inj_mod, Zplus_mod_idemp_l. Qed.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-RelDecision A B {{lt}} S :-
     tc-stdpp.base.tc-RelDecision A B {{Nat.lt}} S.
 }}.

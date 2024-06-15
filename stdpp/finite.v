@@ -6,7 +6,7 @@ Elpi Query lp:{{
   coq.option.add ["TC", "allow", "evar"] (coq.option.bool ff) ff.
 }}.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % TC allow evar
   :before "solve-aux-intros"
   solve-aux G L :-
     coq.option.get ["TC", "allow", "evar"] (coq.option.bool tt), !,

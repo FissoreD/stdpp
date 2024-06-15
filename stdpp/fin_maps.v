@@ -237,7 +237,7 @@ Proof.
   destruct (m1 !! i), (m2 !! i), (m3 !! i); simplify_eq/=;
     done || etrans; eauto.
 Qed.
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-Coq.Classes.RelationClasses.tc-PreOrder A (app[{{@subseteq}}|_] as T) S :-
     T' = {{@map_included _ _ _ _ _}},
     coq.unify-eq T T' ok,
@@ -2478,7 +2478,7 @@ Goal forall A, Empty (M A). apply _. Qed.
 Lemma XX: forall A, Union (M A). apply _. Defined.
 Goal ((@map_union M H4)) = XX. apply eq_refl. Qed.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-LeftId AA BB CC X SS :-
     X = {{@union _ _}},
     T = {{@union_with lp:A (M lp:A) (@map_union_with M H4 lp:A) lp:_}},
@@ -2994,7 +2994,7 @@ Section intersection_with.
 End intersection_with.
 
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-LeftAbsorb AA BB CC X SS :-
     X = {{@intersection _ _}},
     T = {{@intersection_with lp:A (M lp:A) (@map_intersection_with M H4 lp:A) lp:_}},
@@ -3141,7 +3141,7 @@ Proof.
   destruct (m !! i); eauto.
 Qed.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-RightId AA BB CC X SS :-
     X = {{@difference _ _}},
     T = {{@merge M H4 lp:A2 lp:A2 lp:A2 lp:A1}},
@@ -4231,7 +4231,7 @@ Section img.
   Proof.
     intros Hsep Himg.
     Check _ : Filter (_ * _) (M A).
-    Elpi Accumulate TC.Solver lp:{{
+    Elpi Accumulate TC.Solver lp:{{ % unif
       tc-stdpp.base.tc-Decision X S :-
         X = (match _ _ _),
         Y = {{@uncurry _ _ _ _ _}},

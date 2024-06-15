@@ -914,7 +914,7 @@ Section prod_setoid.
   Global Instance prod_equivalence :
     Equivalence (≡@{A}) → Equivalence (≡@{B}) → Equivalence (≡@{A * B}) := _.
 
-  Elpi Accumulate  TC.Solver lp:{{
+  Elpi Accumulate  TC.Solver lp:{{ % unif
     pred remove_equiv_prod_equiv i:term, o:term.
     remove_equiv_prod_equiv T1 T3 :-
       T1 = {{@equiv _ (@prod_equiv _ _ _ _)}},
@@ -1021,7 +1021,7 @@ End sum_relation.
 
 Global Instance sum_equiv `{Equiv A, Equiv B} : Equiv (A + B) := sum_relation (≡) (≡).
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
     pred remove_equiv_sum_equiv i:term, o:term.
     remove_equiv_sum_equiv T1 T3 :-
       T1 = {{@equiv _ (@sum_equiv _ _ _ _)}}, 
@@ -1741,7 +1741,7 @@ Global Hint Mode Half ! : typeclass_instances. (*Mode also added in elpi*)
 Notation "½" := half (format "½") : stdpp_scope.
 Notation "½*" := (fmap (M:=list) half) : stdpp_scope.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-Decision (match X {{fun (_: prod _ _) => Prop}} _ as XX) S :- !,
     F = app[{{@uncurry}},A,B,{{Prop}},TT,X],
     coq.unify-eq XX F ok,

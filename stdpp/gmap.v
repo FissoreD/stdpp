@@ -656,7 +656,7 @@ End curry_uncurry.
 (** * Finite sets *)
 Definition gset K `{Countable K} := mapset (gmap K).
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-ElemOf A B S :-
     B = {{@gset _ _ _}},
     C = {{@mapset' _}},
@@ -801,7 +801,7 @@ Global Typeclasses Opaque gset.
 Elpi Override TC TC.Solver All.
 Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
 
-Elpi Accumulate TC.Solver lp:{{
+Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-RelDecision A B C S :-
     C = {{@elem_of _ _ (@elem_of _ _ _)}}, !,
     D = {{@elem_of _ _ (@gset_elem_of _ _ _)}},

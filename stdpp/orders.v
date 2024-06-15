@@ -40,7 +40,7 @@ Section orders.
     eauto using strict_transitive_r, strict_include.
   Qed.
 
-  Elpi Accumulate TC.Solver lp:{{
+  Elpi Accumulate TC.Solver lp:{{ % unif
     tc-stdpp.base.tc-Decision T S :-
       coq.safe-dest-app T (global {{:gref strict}}) _,
       AND = {{and _ _}},

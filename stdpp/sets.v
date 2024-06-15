@@ -5,7 +5,7 @@ From stdpp Require Export orders list list_numbers.
 From stdpp Require Import finite.
 From stdpp Require Import options.
 
-Elpi Accumulate  TC.Solver lp:{{
+Elpi Accumulate  TC.Solver lp:{{ % hack-8-17
   :before "coq-assign-evar-raw"
   evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ 8 19 _, !,
     hack-8-17.propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.

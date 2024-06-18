@@ -7,7 +7,7 @@ Elpi Query lp:{{
 }}.
 
 Elpi Accumulate TC.Solver lp:{{ % TC allow evar
-  :before "solve-aux-intros"
+  :before "0"
   solve-aux G L :-
     coq.option.get ["TC", "allow", "evar"] (coq.option.bool tt), !,
     L = [seal G].

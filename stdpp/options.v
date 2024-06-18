@@ -22,3 +22,13 @@ that bullets and curly braces must be used to structure the proof. *)
 this file everywhere.
 From stdpp Require Import options.
 *)
+From elpi Require Export tc.
+(* #[export] Elpi TC Set Time All. *)
+
+(* Uncomment following line to print stats *)
+(* Global Set Debug "elpitime".
+Elpi Accumulate tc.db lp:{{
+  :after "0"
+  time-aux _ Msg Time :- !,
+  coq.debug "[TC] Benching - Time of" Msg "is" Time. 
+}}. *)

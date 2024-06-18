@@ -13,7 +13,7 @@ From Coq Require Import Permutation.
 Export ListNotations.
 From Coq.Program Require Export Basics Syntax.
 From stdpp Require Import options.
-From elpi Require Import tc.
+
 TC.AddAllClasses.
 TC.AddAllInstances.
 Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.

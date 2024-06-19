@@ -26,5 +26,3 @@ _opam
 *.txt
 *.html
 *.timing
-*.csv
-*.log

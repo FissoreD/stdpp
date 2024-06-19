@@ -2,7 +2,7 @@ import re, sys
 
 elpi_time = "Elpi: query"
 tc_time = "\[TC\] Benching"
-stdpp_file = "stdpp/.*.v"
+stdpp_file = "COQC .*.v"
 
 def make_rex(s): return rf".*{s}.*"
 
@@ -40,16 +40,17 @@ def add_dico(d, k1, k2, v):
     x[k2] = x.get(k2, 0) + v
     d[k1] = x
 
-keys_tc = "Compile Instance, build query, mode check, instance search, refine.typecheck, msolve".split(",")
+keys_tc = "Compiler for Instance, Compiler for Class, Compile Instance, build query, mode check, instance search, refine.typecheck, msolve".split(",")
 keys_elpitime = "query-compilation, static-check, optimization, runtime".split(",")
 all_keys = keys_tc + keys_elpitime
 
 def get_stats(lines):
     d = dict()
     total = "TOTAL"
+    f = ""
     for l in lines:
         fl = get_floats(l)
-        if match_rex(r"COQC .*.v", l):
+        if match_rex(stdpp_file, l):
             f = l
         elif elpi_time in l:
             assert(len(fl) == 4)

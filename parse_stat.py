@@ -1,8 +1,11 @@
 import re, sys
 
 elpi_time = "Elpi: query"
-tc_time = "\[TC\] Benching"
+tc_time = "\[TC\] - Time"
 stdpp_file = "COQC .*.v"
+
+FAIL = "fail"
+WITH_FAIL = False
 
 def make_rex(s): return rf".*{s}.*"
 
@@ -40,9 +43,12 @@ def add_dico(d, k1, k2, v):
     x[k2] = x.get(k2, 0) + v
     d[k1] = x
 
-keys_tc = "Compiler for Instance, Compiler for Class, Compile Instance, build query, mode check, instance search, refine.typecheck, msolve".split(",")
-keys_elpitime = "query-compilation, static-check, optimization, runtime".split(",")
-all_keys = keys_tc + keys_elpitime
+keysCompile = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty".split(",")
+keys_tc = "mode check,refine.typecheck,msolve,full instance search, instance search".split(",")
+keys_elpitime = "query-compilation,static-check,optimization,runtime".split(",")
+all_keys = keysCompile + keys_tc + keys_elpitime
+
+def build_fail_key(msg): return f"{msg} {FAIL}"
 
 def get_stats(lines):
     d = dict()
@@ -58,8 +64,14 @@ def get_stats(lines):
                 add_dico(d, f, k, fl[i])
                 add_dico(d, total, k, fl[i])
         else:
+            for k in keysCompile:
+                if k in l:
+                    add_dico(d, f, k, fl[0])
+                    add_dico(d, total, k, fl[0])
+                    break
             for k in keys_tc:
                 if k in l:
+                    k = build_fail_key(k) if WITH_FAIL and FAIL in l else k
                     assert(len(fl) == 1)
                     add_dico(d, f, k, fl[0])
                     add_dico(d, total, k, fl[0])
@@ -71,6 +83,11 @@ def normalize_fname(fname):
 
 def write_all_to_dico(d, fname="stat.csv"):
     with open(fname, 'w') as f:
+        all_keys = list(keysCompile + keys_tc)
+        all_keys.extend(keys_elpitime)
+        if WITH_FAIL:
+            for i in keys_tc: 
+                all_keys.append(build_fail_key(i))
         f.write("fname," + ",".join(all_keys) + "\n")
         for k in d:
             v = d[k]

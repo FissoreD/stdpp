@@ -168,7 +168,7 @@ def compare(a, b):
 
 def stat_per_file(d, path="logs/timing-per-file/"):
     os.makedirs(path, exist_ok=True)
-    all_keys = list(keysCompile + keys_tc) + [CHAR_ELPI] + [CHAR_COQ]
+    all_keys = list(keysCompile + keys_tc + keys_elpitime + [CHAR_ELPI, CHAR_COQ])
     for fname in d:
         if fname == "option": continue
         with open(path + fname + ".csv", "w") as f:

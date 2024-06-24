@@ -1,0 +1,6 @@
+Chars 141 - 179 [From~Coq.ssr~Require~Export~ss...] 0.007 secs (0.003u,0.003s)
+Chars 180 - 214 [From~stdpp~Require~Export~prel...] 0.355 secs (0.256u,0.099s)
+Chars 215 - 249 [From~stdpp~Require~Import~opti...] 0. secs (0.u,0.s)
+Chars 309 - 344 [#[global]Open~Scope~general_if...] 0. secs (0.u,0.s)
+Chars 373 - 408 [#[global]Set~SsrOldRewriteGoal...] 0. secs (0.u,0.s)
+Chars 457 - 489 [Ltac~done~:=~stdpp.tactics.done.] 0. secs (0.u,0.s)

@@ -17,30 +17,35 @@ starting with
 
 import re, sys, os
 from functools import cmp_to_key
+import matplotlib.pyplot as plt
+import numpy as np
 
-elpi_time = "Elpi: query"
-tc_time = "\[TC\] - Time"
-stdpp_file = "COQC .*.v"
-chars = "Chars"
-CHAR_ELPI = "ELPI TIME"
-CHAR_COQ = "COQ_TIME"
-total = "TOTAL"
+F_ELPI_QUERY = "Elpi: query"
+F_ELPI_TC = "\[TC\] - Time"
+F_COMPILE = "COQC .*.v"
+F_TIMING = "Chars" # Lines printed by coq when -time || TIMING=1 is active
+
+L_TIME_ELPI = "ELPI TIME"
+L_TIME_COQ = "COQ_TIME"
+TOTAL = "TOTAL"
+L_COMPILE = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty".split(",")
+L_ELPI_TC = "mode check,refine.typecheck,msolve,full instance search, instance search".split(",")
+L_ELPITIME = "query-compilation,static-check,optimization,runtime".split(",")
+ALL_KEYS = L_COMPILE + L_ELPI_TC + L_ELPITIME
 
 FAIL = "fail"
 WITH_FAIL = False
 
 def normalize_elpi_override(l):
     elpi_ov = "Elpi~Override"
-    if elpi_ov in l:
-        return re.sub(f"{elpi_ov}.*\]", elpi_ov + "]", l)
-    return l
+    return re.sub(f"{elpi_ov}.*\]", elpi_ov + "]", l)
 
 def make_rex(s): return rf".*{s}.*"
 
 def match_rex(s, l): return re.match(make_rex(s), l)
 
 def valid_line(l):
-    return re.match(rf".*({elpi_time}|{tc_time}|{stdpp_file}).*", l)
+    return re.match(rf".*({F_ELPI_QUERY}|{F_ELPI_TC}|{F_COMPILE}).*", l)
 
 def filter_lines(f):
     with open(f) as F:
@@ -48,16 +53,32 @@ def filter_lines(f):
 
 def get_floats(s): return list(map(float, re.findall(r"[-+]?(?:\d*\.*\d+)", s)))
 
+def normalize_fname(fname):
+    return fname.split('/')[-1].replace("\n", "").split(".")[0]
+
 """
 A dict d associates a file name to a dictionary d'
-    d' associates to each stat its total time.
+    d' associates to each line of file (printed by the option TIMING=1) a dict d''
+        d'' associates to each stat its total time.
+
+Moreover:
+ - the dict has a special key TOTAL, containing the sum of all the stats
+   of all files.
+ - for each file, d' has a special key TOTAL, containing the sum of the stats of the file
 
 An example of dict could be:
 {
     "stdpp/base.v": {
-        "Compile Instance": 30,
-        "Compile Goal": 20,
-        ...
+        "Char 400 - 1000 ...":{
+            "ELPI TIME" : 50,
+            "COQ TIME" : 30,
+            "Compile Instance": 30,
+            "Compile Goal": 20,
+            ...
+        },
+        "Char 1020 ....":{
+            ....
+        }
     },
     "stdpp/option.v":{
         ...
@@ -72,13 +93,12 @@ def add_dico(d, ch, k1, k2, v):
     chD[k1] = x
     d[ch] = chD
 
-keysCompile = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty".split(",")
-keys_tc = "mode check,refine.typecheck,msolve,full instance search, instance search".split(",")
-keys_elpitime = "query-compilation,static-check,optimization,runtime".split(",")
-all_keys = keysCompile + keys_tc + keys_elpitime
-
 def build_fail_key(msg): return f"{msg} {FAIL}"
 
+"""
+retrieves all the times in a log file containing the stats of
+the compilation in coq where the option TIMING=1 is active
+"""
 def get_time_f2(f2):
     try: 
         with open(f2) as F:
@@ -86,7 +106,7 @@ def get_time_f2(f2):
             d = dict ()
             for i in l:
                 fl = get_floats(i)
-                if match_rex(chars, i):
+                if match_rex(F_TIMING, i):
                     i = normalize_elpi_override(i)
                     ch = i[:(i.index("] "))]
                     d[ch.replace("\"", "")] = fl[-3]
@@ -95,65 +115,58 @@ def get_time_f2(f2):
         return dict()
 
 def get_stat_without_elpi(ch, rows_f2):
-    try:
-        return rows_f2[ch] #.get(ch, -1)
-    except KeyError:
-        print(list(rows_f2.keys()))
-        return rows_f2[ch] 
+    return rows_f2[ch] #.get(ch, -1)
 
 def get_stats(lines, f2=dict()):
     d = dict()
-    f = ""
-    ch = ""
+    fname = ""
+    row_name = ""
     for l in lines:
         fl = get_floats(l)
-        if match_rex(stdpp_file, l):
-            f = normalize_fname(l)
-        elif match_rex(chars, l) and f != "options":
+        if match_rex(F_COMPILE, l):
+            fname = normalize_fname(l)
+        elif match_rex(F_TIMING, l) and fname != "options":
             l = normalize_elpi_override(l)
-            ch = l[:(l.index("] "))]
-            add_dico(d, f, ch, CHAR_ELPI, fl[-3])
-            add_dico(d, f, ch, CHAR_COQ, get_stat_without_elpi(ch, f2))
-            add_dico(d, f, total, CHAR_ELPI, fl[-3])
-            add_dico(d, f, total, CHAR_COQ, get_stat_without_elpi(ch, f2))
-            add_dico(d, total, "", CHAR_ELPI, fl[-3])
-            add_dico(d, total, "", CHAR_COQ, get_stat_without_elpi(ch, f2))
-        elif elpi_time in l:
+            row_name = l[:(l.index("] "))]
+            add_dico(d, fname, row_name, L_TIME_ELPI, fl[-3])
+            add_dico(d, fname, row_name, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
+            add_dico(d, fname, TOTAL, L_TIME_ELPI, fl[-3])
+            add_dico(d, fname, TOTAL, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
+            add_dico(d, TOTAL, TOTAL, L_TIME_ELPI, fl[-3])
+            add_dico(d, TOTAL, TOTAL, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
+        elif F_ELPI_QUERY in l:
             assert(len(fl) == 4)
-            for i, k in enumerate(keys_elpitime):
-                add_dico(d, f, ch, k, fl[i])
-                add_dico(d, f, total, k, fl[i])
-                add_dico(d, total, "", k, fl[i])
+            for i, k in enumerate(L_ELPITIME):
+                add_dico(d, fname, row_name, k, fl[i])
+                add_dico(d, fname, TOTAL, k, fl[i])
+                add_dico(d, TOTAL, TOTAL, k, fl[i])
         else:
-            for k in keysCompile:
+            for k in L_COMPILE:
                 if k in l:
-                    add_dico(d, f, ch, k, fl[0])
-                    add_dico(d, f, total, k, fl[0])
-                    add_dico(d, total, "", k, fl[0])
+                    add_dico(d, fname, row_name, k, fl[0])
+                    add_dico(d, fname, TOTAL, k, fl[0])
+                    add_dico(d, TOTAL, TOTAL, k, fl[0])
                     break
-            for k in keys_tc:
+            for k in L_ELPI_TC:
                 if k in l:
                     k = build_fail_key(k) if WITH_FAIL and FAIL in l else k
                     assert(len(fl) == 1)
-                    add_dico(d, f, ch, k, fl[0])
-                    add_dico(d, f, total, k, fl[0])
-                    add_dico(d, total, "", k, fl[0])
+                    add_dico(d, fname, row_name, k, fl[0])
+                    add_dico(d, fname, TOTAL, k, fl[0])
+                    add_dico(d, TOTAL, TOTAL, k, fl[0])
                     break
     return d
 
-def normalize_fname(fname):
-    return fname.split('/')[-1].replace("\n", "").split(".")[0]
-
 def write_all_to_dico(d, fname="stat.csv"):
     with open(fname, 'w') as f:
-        all_keys = list(keysCompile + keys_tc)
-        all_keys.extend(keys_elpitime)
+        all_keys = list(L_COMPILE + L_ELPI_TC)
+        all_keys.extend(L_ELPITIME)
         if WITH_FAIL:
-            for i in keys_tc: 
+            for i in L_ELPI_TC: 
                 all_keys.append(build_fail_key(i))
         f.write("fname," + ",".join(all_keys) + "\n")
         for k in d:
-            v = d[k][""] if "" in d[k] else dict()
+            v = d[k][TOTAL] if TOTAL in d[k] else dict()
             f.write(k)
             for i in all_keys:
                 f.write(",")
@@ -168,7 +181,7 @@ def compare(a, b):
 
 def stat_per_file(d, path="logs/timing-per-file/"):
     os.makedirs(path, exist_ok=True)
-    all_keys = list(keysCompile + keys_tc + keys_elpitime + [CHAR_ELPI, CHAR_COQ])
+    all_keys = list(L_COMPILE + L_ELPI_TC + L_ELPITIME + [L_TIME_ELPI, L_TIME_COQ])
     for fname in d:
         if fname == "option": continue
         with open(path + fname + ".csv", "w") as f:
@@ -177,17 +190,69 @@ def stat_per_file(d, path="logs/timing-per-file/"):
             kk = sorted(r.keys(), key=cmp_to_key(compare))
             for v in kk:
                 v1 = v.replace(",","").replace("\"","")
-                f.write("{}".format(v1 if v1 != "" else "TOTAL"))
+                f.write("{}".format(v1))
                 for i in all_keys:
                     f.write(",")
                     if i in r[v]:
                         f.write("{:.4f}".format(r[v][i]))
                 f.write("\n")
 
+def all_files_to_plot(d, fname="plot.png"):
+    fnames = list(d.keys())[:]
+    # fnames = [TOTAL]
+    cols = L_ELPITIME + [L_TIME_ELPI]
+    d1 = {}
+
+    for coli,col in enumerate(cols) :
+        d1[col] = []
+        for fnamei, fname in enumerate(fnames):
+            d11 = d[fname][TOTAL] if TOTAL in d[fname] else dict()
+            if col != L_TIME_ELPI:
+                old_sum = d1[cols[coli-1]][fnamei] if coli > 0 else 0
+            else:
+                old_sum = 0
+            new_sum = old_sum + (d11.get(col, 0))
+            d1[col].append(new_sum)
+
+    coq_t = []
+    for fname in fnames:
+        d11 = d[fname][TOTAL][L_TIME_COQ] if TOTAL in d[fname] and L_TIME_COQ in d[fname][TOTAL] else 0
+        coq_t.append(d11)
+
+    x = np.arange(len(fnames))  # the label locations
+    width = 0.2  # the width of the bars
+    multiplier = 0
+
+    fig, ax = plt.subplots(layout='constrained')
+    bar_colors = ['red', 'blue', 'yellow', 'orange', 'green']
+
+    for i,attribute in enumerate(reversed(cols)):
+        measurement = d1[attribute]
+        rects = ax.bar(x, measurement, width, label=attribute, color=bar_colors[i])
+        if attribute == L_TIME_ELPI:
+            ax.bar_label(rects, padding=3)
+        multiplier += 1
+    rects = ax.bar(x+width, coq_t, width, label=L_TIME_COQ)
+    ax.bar_label(rects, padding=3)
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Time')
+    ax.set_title('Stats')
+    ax.set_xticks(x + width, fnames, rotation="vertical")
+    # ax.legend(loc='upper left', ncols=len(L_ELPITIME))
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+            ncol=len(cols)+1, fancybox=True, shadow=True)
+
+    ax.set_ylim(-2, 25)
+
+    plt.show()
+    
+
 if __name__ == "__main__":
     f1 = sys.argv[1]
     f2 = sys.argv[2] if len(sys.argv) > 2 else ""
     lines = filter_lines(sys.argv[1])
     d = get_stats(lines, get_time_f2(f2))
-    write_all_to_dico(d)
-    stat_per_file(d)
+    # write_all_to_dico(d)
+    # stat_per_file(d)
+    all_files_to_plot(d)

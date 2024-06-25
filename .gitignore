@@ -27,3 +27,4 @@ _opam
 *.html
 *.timing
 logs/timing-per-file/*
+logs/logs/timing-per-file/*

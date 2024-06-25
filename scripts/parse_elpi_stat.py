@@ -52,9 +52,12 @@ def match_rex(s, l): return re.match(make_rex(s), l)
 def valid_line(l):
     return re.match(rf".*({F_ELPI_QUERY}|{F_ELPI_TC}|{F_COMPILE}).*", l)
 
-def filter_lines(f):
+def normalize_line(f):
+    return normalize_elpi_override(f.replace("\"", ""))
+
+def read_file(f):
     with open(f) as F:
-        return [i.replace("\"", "") for i in F.readlines()]
+        return [normalize_line(i) for i in F.readlines()]
 
 def get_floats(s): return list(map(float, re.findall(r"[-+]?(?:\d*\.*\d+)", s)))
 
@@ -100,40 +103,39 @@ def add_dico(d, ch, k1, k2, v):
 
 def build_fail_key(msg): return f"{msg} {FAIL}"
 
+def clean_time_row(l): return l[:(l.index("] "))]
+
 """
 retrieves all the times in a log file containing the stats of
 the compilation in coq where the option TIMING=1 is active
 """
 def get_time_f2(f2):
     try: 
-        with open(f2) as F:
-            l = F.readlines()
-            d = dict ()
-            for i in l:
-                fl = get_floats(i)
-                if match_rex(F_TIMING, i):
-                    i = normalize_elpi_override(i)
-                    ch = i[:(i.index("] "))]
-                    d[ch.replace("\"", "")] = fl[-3]
-            return d
+        return {clean_time_row(i): get_floats(i)[-3] for i in read_file(f2) if match_rex(F_TIMING, i)}
     except FileNotFoundError:
         return dict()
-    
-def clean_time_row(l): return l[:(l.index("] "))]
+
+def build_next_rows(lines):
+    all_rows = {}
+    old_pos = 0
+    for pos,i in enumerate(lines):
+        if match_rex(F_TIMING, i):
+            i = clean_time_row(i)
+            all_rows[old_pos] = i
+            old_pos = pos
+    return all_rows
 
 def get_stat_without_elpi(ch, rows_f2):
     return rows_f2[ch] #.get(ch, -1)
 
-def find_next_row_name(lines, pos):
-    for i in range(pos, len(lines)):
-        if match_rex(F_TIMING, lines[i]):
-            return clean_time_row(lines[i])
-    raise NotImplemented
-
 def get_stats(lines, f2=dict()):
     d = dict()
+    all_rows = build_next_rows(lines)
+    def next_row(r):
+        return all_rows[r]
     fname = ""
     row_name = ""
+    row_pos = 0
     for iii,l in enumerate(lines):
         fl = get_floats(l)
         if match_rex(F_COMPILE, l):
@@ -141,6 +143,7 @@ def get_stats(lines, f2=dict()):
         elif match_rex(F_TIMING, l) and fname != "options":
             l = normalize_elpi_override(l)
             row_name = clean_time_row(l)
+            row_pos = iii
             add_dico(d, fname, row_name, L_TIME_ELPI, fl[-3])
             add_dico(d, fname, row_name, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
             add_dico(d, fname, TOTAL, L_TIME_ELPI, fl[-3])
@@ -148,14 +151,14 @@ def get_stats(lines, f2=dict()):
             add_dico(d, TOTAL, TOTAL, L_TIME_ELPI, fl[-3])
             add_dico(d, TOTAL, TOTAL, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
         elif F_ELPI_QUERY in l:
-            row_name1 =  find_next_row_name(lines, iii)
+            row_name1 = next_row(row_pos)
             assert(len(fl) == 4)
             for i, k in enumerate(L_ELPITIME):
                 add_dico(d, fname, row_name1, k, fl[i])
                 add_dico(d, fname, TOTAL, k, fl[i])
                 add_dico(d, TOTAL, TOTAL, k, fl[i])
         elif match_rex(F_ELPI_TC, l):
-            row_name1 =  find_next_row_name(lines, iii)
+            row_name1 =  next_row(row_pos)
             for k in L_COMPILE:
                 if k in l:
                     add_dico(d, fname, row_name1, k, fl[0])
@@ -171,7 +174,7 @@ def get_stats(lines, f2=dict()):
                     add_dico(d, TOTAL, TOTAL, k, fl[0])
                     break
         elif match_rex(F_ELPI_GET_AND_COMPILE, l):
-            row_name1 = find_next_row_name(lines, iii)
+            row_name1 = next_row(row_pos)
             add_dico(d, fname, row_name1, L_ELPI_GET_AND_COMPILE, fl[0]) 
             add_dico(d, fname, TOTAL, L_ELPI_GET_AND_COMPILE, fl[0])
             add_dico(d, TOTAL, TOTAL, L_ELPI_GET_AND_COMPILE, fl[0])
@@ -272,8 +275,8 @@ def all_files_to_plot(d, fname="plot.png"):
 if __name__ == "__main__":
     f1 = sys.argv[1]
     f2 = sys.argv[2] if len(sys.argv) > 2 else ""
-    lines = filter_lines(sys.argv[1])
+    lines = read_file(sys.argv[1])
     d = get_stats(lines, get_time_f2(f2))
-    # write_all_to_dico(d)
-    # stat_per_file(d)
-    all_files_to_plot(d)
+    write_all_to_dico(d)
+    stat_per_file(d)
+    # all_files_to_plot(d)

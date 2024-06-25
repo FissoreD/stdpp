@@ -20,7 +20,9 @@ from functools import cmp_to_key
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Rows to filter
 F_ELPI_QUERY = "Elpi: query"
+F_ELPI_GET_AND_COMPILE = "Elpi: get_and_compile"
 F_ELPI_TC = "\[TC\] - Time"
 F_COMPILE = "COQC .*.v"
 F_TIMING = "Chars" # Lines printed by coq when -time || TIMING=1 is active
@@ -28,9 +30,12 @@ F_TIMING = "Chars" # Lines printed by coq when -time || TIMING=1 is active
 L_TIME_ELPI = "ELPI TIME"
 L_TIME_COQ = "COQ_TIME"
 TOTAL = "TOTAL"
-L_COMPILE = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty".split(",")
+
+# Substrings to find in filtered lines
+L_COMPILE = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty,resolve_all_evars".split(",")
 L_ELPI_TC = "mode check,refine.typecheck,msolve,full instance search, instance search".split(",")
 L_ELPITIME = "query-compilation,static-check,optimization,runtime".split(",")
+L_ELPI_GET_AND_COMPILE = "get_and_compile"
 ALL_KEYS = L_COMPILE + L_ELPI_TC + L_ELPITIME
 
 FAIL = "fail"
@@ -113,21 +118,29 @@ def get_time_f2(f2):
             return d
     except FileNotFoundError:
         return dict()
+    
+def clean_time_row(l): return l[:(l.index("] "))]
 
 def get_stat_without_elpi(ch, rows_f2):
     return rows_f2[ch] #.get(ch, -1)
+
+def find_next_row_name(lines, pos):
+    for i in range(pos, len(lines)):
+        if match_rex(F_TIMING, lines[i]):
+            return clean_time_row(lines[i])
+    raise NotImplemented
 
 def get_stats(lines, f2=dict()):
     d = dict()
     fname = ""
     row_name = ""
-    for l in lines:
+    for iii,l in enumerate(lines):
         fl = get_floats(l)
         if match_rex(F_COMPILE, l):
             fname = normalize_fname(l)
         elif match_rex(F_TIMING, l) and fname != "options":
             l = normalize_elpi_override(l)
-            row_name = l[:(l.index("] "))]
+            row_name = clean_time_row(l)
             add_dico(d, fname, row_name, L_TIME_ELPI, fl[-3])
             add_dico(d, fname, row_name, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
             add_dico(d, fname, TOTAL, L_TIME_ELPI, fl[-3])
@@ -135,15 +148,17 @@ def get_stats(lines, f2=dict()):
             add_dico(d, TOTAL, TOTAL, L_TIME_ELPI, fl[-3])
             add_dico(d, TOTAL, TOTAL, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
         elif F_ELPI_QUERY in l:
+            row_name1 =  find_next_row_name(lines, iii)
             assert(len(fl) == 4)
             for i, k in enumerate(L_ELPITIME):
-                add_dico(d, fname, row_name, k, fl[i])
+                add_dico(d, fname, row_name1, k, fl[i])
                 add_dico(d, fname, TOTAL, k, fl[i])
                 add_dico(d, TOTAL, TOTAL, k, fl[i])
-        else:
+        elif match_rex(F_ELPI_TC, l):
+            row_name1 =  find_next_row_name(lines, iii)
             for k in L_COMPILE:
                 if k in l:
-                    add_dico(d, fname, row_name, k, fl[0])
+                    add_dico(d, fname, row_name1, k, fl[0])
                     add_dico(d, fname, TOTAL, k, fl[0])
                     add_dico(d, TOTAL, TOTAL, k, fl[0])
                     break
@@ -151,19 +166,25 @@ def get_stats(lines, f2=dict()):
                 if k in l:
                     k = build_fail_key(k) if WITH_FAIL and FAIL in l else k
                     assert(len(fl) == 1)
-                    add_dico(d, fname, row_name, k, fl[0])
+                    add_dico(d, fname, row_name1, k, fl[0])
                     add_dico(d, fname, TOTAL, k, fl[0])
                     add_dico(d, TOTAL, TOTAL, k, fl[0])
                     break
+        elif match_rex(F_ELPI_GET_AND_COMPILE, l):
+            row_name1 = find_next_row_name(lines, iii)
+            add_dico(d, fname, row_name1, L_ELPI_GET_AND_COMPILE, fl[0]) 
+            add_dico(d, fname, TOTAL, L_ELPI_GET_AND_COMPILE, fl[0])
+            add_dico(d, TOTAL, TOTAL, L_ELPI_GET_AND_COMPILE, fl[0])
     return d
 
 def write_all_to_dico(d, fname="stat.csv"):
     with open(fname, 'w') as f:
-        all_keys = list(L_COMPILE + L_ELPI_TC)
+        all_keys = list(L_COMPILE + L_ELPI_TC + [L_ELPI_GET_AND_COMPILE])
         all_keys.extend(L_ELPITIME)
         if WITH_FAIL:
             for i in L_ELPI_TC: 
                 all_keys.append(build_fail_key(i))
+        all_keys.extend([L_TIME_ELPI, L_TIME_COQ])
         f.write("fname," + ",".join(all_keys) + "\n")
         for k in d:
             v = d[k][TOTAL] if TOTAL in d[k] else dict()
@@ -181,7 +202,7 @@ def compare(a, b):
 
 def stat_per_file(d, path="logs/timing-per-file/"):
     os.makedirs(path, exist_ok=True)
-    all_keys = list(L_COMPILE + L_ELPI_TC + L_ELPITIME + [L_TIME_ELPI, L_TIME_COQ])
+    all_keys = list(L_COMPILE + L_ELPI_TC + L_ELPITIME + [L_TIME_ELPI, L_TIME_COQ, L_ELPI_GET_AND_COMPILE])
     for fname in d:
         if fname == "option": continue
         with open(path + fname + ".csv", "w") as f:
@@ -200,7 +221,7 @@ def stat_per_file(d, path="logs/timing-per-file/"):
 def all_files_to_plot(d, fname="plot.png"):
     fnames = list(d.keys())[:]
     # fnames = [TOTAL]
-    cols = L_ELPITIME + [L_TIME_ELPI]
+    cols = list(reversed(L_ELPITIME)) + [L_ELPI_GET_AND_COMPILE, L_TIME_ELPI]
     d1 = {}
 
     for coli,col in enumerate(cols) :
@@ -223,8 +244,8 @@ def all_files_to_plot(d, fname="plot.png"):
     width = 0.2  # the width of the bars
     multiplier = 0
 
-    fig, ax = plt.subplots(layout='constrained')
-    bar_colors = ['red', 'blue', 'yellow', 'orange', 'green']
+    fig, ax = plt.subplots()
+    bar_colors = ['red', 'blue', 'orange', 'green', "silver", 'yellow', "tan", "black", ]
 
     for i,attribute in enumerate(reversed(cols)):
         measurement = d1[attribute]

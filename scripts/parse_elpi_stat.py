@@ -37,6 +37,7 @@ L_ELPI_TC = "mode check,refine.typecheck,msolve,full instance search, instance s
 L_ELPITIME = "query-compilation,static-check,optimization,runtime".split(",")
 L_ELPI_GET_AND_COMPILE = "get_and_compile"
 ALL_KEYS = L_COMPILE + L_ELPI_TC + L_ELPITIME
+L_TOT_MINUS_ELPITIME = "elpitot - elpitime"
 
 FAIL = "fail"
 WITH_FAIL = False
@@ -130,9 +131,13 @@ def get_stat_without_elpi(ch, rows_f2):
 
 def get_stats(lines, f2=dict()):
     d = dict()
+    def add_dico_aux(fname, row_name, label, v):
+        add_dico(d, fname, row_name, label, v)
+        add_dico(d, fname, TOTAL, label, v)
+        add_dico(d, TOTAL, TOTAL, label, v)
     all_rows = build_next_rows(lines)
     def next_row(r):
-        return all_rows[r]
+        return all_rows.get(r, "") # [r]
     fname = ""
     row_name = ""
     row_pos = 0
@@ -144,40 +149,32 @@ def get_stats(lines, f2=dict()):
             l = normalize_elpi_override(l)
             row_name = clean_time_row(l)
             row_pos = iii
-            add_dico(d, fname, row_name, L_TIME_ELPI, fl[-3])
-            add_dico(d, fname, row_name, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
-            add_dico(d, fname, TOTAL, L_TIME_ELPI, fl[-3])
-            add_dico(d, fname, TOTAL, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
-            add_dico(d, TOTAL, TOTAL, L_TIME_ELPI, fl[-3])
-            add_dico(d, TOTAL, TOTAL, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
+            add_dico_aux(fname, row_name, L_TIME_ELPI, fl[-3])
+            add_dico_aux(fname, row_name, L_TIME_COQ, get_stat_without_elpi(row_name, f2))
+            add_dico_aux(fname, row_name, L_TOT_MINUS_ELPITIME, fl[-3])
         elif F_ELPI_QUERY in l:
             row_name1 = next_row(row_pos)
             assert(len(fl) == 4)
             for i, k in enumerate(L_ELPITIME):
-                add_dico(d, fname, row_name1, k, fl[i])
-                add_dico(d, fname, TOTAL, k, fl[i])
-                add_dico(d, TOTAL, TOTAL, k, fl[i])
+                add_dico_aux(fname, row_name1, k, fl[i])
+                add_dico_aux(fname, row_name1, L_TOT_MINUS_ELPITIME, -fl[i])
+
         elif match_rex(F_ELPI_TC, l):
             row_name1 =  next_row(row_pos)
             for k in L_COMPILE:
                 if k in l:
-                    add_dico(d, fname, row_name1, k, fl[0])
-                    add_dico(d, fname, TOTAL, k, fl[0])
-                    add_dico(d, TOTAL, TOTAL, k, fl[0])
+                    add_dico_aux(fname, row_name1, k, fl[0])
                     break
             for k in L_ELPI_TC:
                 if k in l:
                     k = build_fail_key(k) if WITH_FAIL and FAIL in l else k
                     assert(len(fl) == 1)
-                    add_dico(d, fname, row_name1, k, fl[0])
-                    add_dico(d, fname, TOTAL, k, fl[0])
-                    add_dico(d, TOTAL, TOTAL, k, fl[0])
+                    add_dico_aux(fname, row_name1, k, fl[0])
                     break
         elif match_rex(F_ELPI_GET_AND_COMPILE, l):
             row_name1 = next_row(row_pos)
-            add_dico(d, fname, row_name1, L_ELPI_GET_AND_COMPILE, fl[0]) 
-            add_dico(d, fname, TOTAL, L_ELPI_GET_AND_COMPILE, fl[0])
-            add_dico(d, TOTAL, TOTAL, L_ELPI_GET_AND_COMPILE, fl[0])
+            add_dico_aux(fname, row_name1, L_ELPI_GET_AND_COMPILE, fl[0]) 
+            add_dico_aux(fname, row_name1, L_TOT_MINUS_ELPITIME, -fl[0])
     return d
 
 def write_all_to_dico(d, fname="stat.csv"):
@@ -187,7 +184,7 @@ def write_all_to_dico(d, fname="stat.csv"):
         if WITH_FAIL:
             for i in L_ELPI_TC: 
                 all_keys.append(build_fail_key(i))
-        all_keys.extend([L_TIME_ELPI, L_TIME_COQ])
+        all_keys.extend([L_TOT_MINUS_ELPITIME, L_TIME_ELPI, L_TIME_COQ])
         f.write("fname," + ",".join(all_keys) + "\n")
         for k in d:
             v = d[k][TOTAL] if TOTAL in d[k] else dict()
@@ -205,7 +202,7 @@ def compare(a, b):
 
 def stat_per_file(d, path="logs/timing-per-file/"):
     os.makedirs(path, exist_ok=True)
-    all_keys = list(L_COMPILE + L_ELPI_TC + L_ELPITIME + [L_TIME_ELPI, L_TIME_COQ, L_ELPI_GET_AND_COMPILE])
+    all_keys = list(L_COMPILE + L_ELPI_TC + L_ELPITIME + [L_ELPI_GET_AND_COMPILE, L_TOT_MINUS_ELPITIME, L_TIME_ELPI, L_TIME_COQ])
     for fname in d:
         if fname == "option": continue
         with open(path + fname + ".csv", "w") as f:
@@ -279,4 +276,4 @@ if __name__ == "__main__":
     d = get_stats(lines, get_time_f2(f2))
     write_all_to_dico(d)
     stat_per_file(d)
-    # all_files_to_plot(d)
+    all_files_to_plot(d)

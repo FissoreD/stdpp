@@ -27,9 +27,9 @@ F_ELPI_TC = "\[TC\] - Time"
 F_COMPILE = "COQC .*.v"
 F_TIMING = "Chars" # Lines printed by coq when -time || TIMING=1 is active
 
-L_TIME_ELPI = "ELPI TIME"
-L_TIME_COQ = "COQ_TIME"
-TOTAL = "TOTAL"
+L_TIME_ELPI = "ELPI TIME" # The time printed by TIMING=1 on a compilation using elpi solver
+L_TIME_COQ = "COQ_TIME"   # The time printed by TIMING=1 on a compilation using coq
+TOTAL = "TOTAL"           # The sum of everything
 
 # Substrings to find in filtered lines
 L_COMPILE = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty,resolve_all_evars".split(",")
@@ -37,13 +37,13 @@ L_ELPI_TC = "mode check,refine.typecheck,msolve,full instance search, instance s
 L_ELPITIME = "query-compilation,static-check,optimization,runtime".split(",")
 L_ELPI_GET_AND_COMPILE = "get_and_compile"
 ALL_KEYS = L_COMPILE + L_ELPI_TC + L_ELPITIME
-L_TOT_MINUS_ELPITIME = "elpitot - elpitime"
+L_TOT_MINUS_ELPITIME = "elpitot - elpitime"   # Time computed as de difference between L_TIME_ELPI and the sum of L_ELPI_GET_AND_COMPILE + L_ELPITIME
 
 FAIL = "fail"
 WITH_FAIL = False
 
 def normalize_elpi_override(l):
-    elpi_ov = "Elpi~Override"
+    elpi_ov = "Elpi~Overrid"
     return re.sub(f"{elpi_ov}.*\]", elpi_ov + "]", l)
 
 def make_rex(s): return rf".*{s}.*"
@@ -87,12 +87,18 @@ An example of dict could be:
         },
         "Char 1020 ....":{
             ....
+        },
+        "TOTAL":{
+            ELPI TIME: ...
         }
     },
     "stdpp/option.v":{
         ...
     },
     ...
+    "TOTAL": {
+        ...
+    }
 }
 """
 def add_dico(d, ch, k1, k2, v):
@@ -127,7 +133,7 @@ def build_next_rows(lines):
     return all_rows
 
 def get_stat_without_elpi(ch, rows_f2):
-    return rows_f2[ch] #.get(ch, -1)
+    return rows_f2[ch] #.get(ch, 0)
 
 def get_stats(lines, f2=dict()):
     d = dict()
@@ -219,9 +225,16 @@ def stat_per_file(d, path="logs/timing-per-file/"):
                 f.write("\n")
 
 def all_files_to_plot(d, fname="plot.png"):
-    fnames = list(d.keys())[:]
+    def compare(x, y):
+        try:
+            return d[y][TOTAL][L_TIME_ELPI] - d[x][TOTAL][L_TIME_ELPI]
+        except KeyError:
+            return 0
+    fnames = list(d.keys())
+    fnames = sorted(fnames, key=cmp_to_key(compare))
     # fnames = [TOTAL]
-    cols = list(reversed(L_ELPITIME)) + [L_ELPI_GET_AND_COMPILE, L_TIME_ELPI]
+    # cols = list(reversed(L_ELPITIME)) + [L_ELPI_GET_AND_COMPILE, L_TIME_ELPI]
+    cols = [L_TOT_MINUS_ELPITIME] + list(reversed(L_ELPITIME)) + [L_ELPI_GET_AND_COMPILE, L_TIME_ELPI]
     d1 = {}
 
     for coli,col in enumerate(cols) :

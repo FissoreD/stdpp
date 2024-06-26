@@ -224,7 +224,7 @@ def stat_per_file(d, path="logs/timing-per-file/"):
                         f.write("{:.4f}".format(r[v][i]))
                 f.write("\n")
 
-def all_files_to_plot(d, fname="plot.png"):
+def all_files_to_plot(d, plot_name="plot.svg"):
     def compare(x, y):
         try:
             return d[y][TOTAL][L_TIME_ELPI] - d[x][TOTAL][L_TIME_ELPI]
@@ -278,7 +278,9 @@ def all_files_to_plot(d, fname="plot.png"):
             ncol=len(cols)+1, fancybox=True, shadow=True)
 
     ax.set_ylim(-2, 25)
-
+    fig.set_size_inches(20,15)
+    # print(fig.get_size_inches())
+    plt.savefig(plot_name, format="svg")
     plt.show()
     
 

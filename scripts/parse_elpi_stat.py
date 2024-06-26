@@ -18,6 +18,7 @@ starting with
 import re, sys, os
 from functools import cmp_to_key
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import numpy as np
 
 # Rows to filter
@@ -277,7 +278,11 @@ def all_files_to_plot(d, plot_name="plot.svg"):
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
             ncol=len(cols)+1, fancybox=True, shadow=True)
 
-    ax.set_ylim(-2, 25)
+    ax.set_ylim(0, 25)
+
+    ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(0.5))
+    ax.yaxis.grid(True, linestyle='--', linewidth=0.2)
+    
     fig.set_size_inches(20,15)
     # print(fig.get_size_inches())
     plt.savefig(plot_name, format="svg")

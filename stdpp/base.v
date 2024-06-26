@@ -1359,7 +1359,7 @@ Global Notation guard := (guard_or ()).
 on maps. In the file [fin_maps] we will axiomatize finite maps.
 The function look up [m !! k] should yield the element at key [k] in [m]. *)
 
-(*TC.Pending_mode - - !.*)
+TC.Pending_mode - - !.
 Class Lookup (K A M : Type) := lookup: K → M → option A.
 Global Hint Mode Lookup - - ! : typeclass_instances. (*Mode also added in elpi*)
 Global Instance: Params (@lookup) 5 := {}.

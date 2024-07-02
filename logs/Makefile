@@ -53,3 +53,8 @@ plot82:
  
 plot83:
 	python ../scripts/parse_elpi_stat.py stat_w_time_08.log stat_w_time_no_elpi_03.log 
+
+
+# Here, we use coq8.20 hook
+plot104:
+	python ../scripts/parse_elpi_stat.py stat_w_time_10.log stat_w_time_no_elpi_04.log 

@@ -44,7 +44,7 @@ FAIL = "fail"
 WITH_FAIL = False
 
 def normalize_elpi_override(l):
-    elpi_ov = "Elpi~Overrid"
+    elpi_ov = "Elpi~TC~"
     return re.sub(f"{elpi_ov}.*\]", elpi_ov + "]", l)
 
 def make_rex(s): return rf".*{s}.*"
@@ -146,12 +146,15 @@ def get_stats(lines, f2=dict()):
     def next_row(r):
         return all_rows.get(r, "") # [r]
     fname = ""
+    fullname = ""
     row_name = ""
     row_pos = 0
     for iii,l in enumerate(lines):
         fl = get_floats(l)
         if match_rex(F_COMPILE, l):
+            fullname = l
             fname = normalize_fname(l)
+        if "unstable" in fullname: continue
         elif match_rex(F_TIMING, l) and fname != "options":
             l = normalize_elpi_override(l)
             row_name = clean_time_row(l)
@@ -265,10 +268,10 @@ def all_files_to_plot(d, plot_name="plot.svg"):
         measurement = d1[attribute]
         rects = ax.bar(x, measurement, width, label=attribute, color=bar_colors[i])
         if attribute == L_TIME_ELPI:
-            ax.bar_label(rects, padding=3)
+            ax.bar_label(rects, padding=3, rotation="vertical")
         multiplier += 1
     rects = ax.bar(x+width, coq_t, width, label=L_TIME_COQ)
-    ax.bar_label(rects, padding=3)
+    ax.bar_label(rects, padding=3, rotation="vertical")
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel('Time')

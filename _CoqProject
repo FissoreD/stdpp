@@ -4,6 +4,9 @@
 -Q stdpp_unstable stdpp.unstable
 # Fixing this one requires Coq 8.17
 -arg -w -arg -future-coercion-class-field
+-arg -w -arg -TC.hints
+-arg -time
+-arg -bt
 
 stdpp/options.v
 stdpp/base.v

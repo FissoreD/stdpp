@@ -5,6 +5,7 @@
 *.v.d
 .coqdeps.d
 .Makefile.coq.d
+.Makefile.coq_bench.d
 *.glob
 *.cache
 *.aux
@@ -14,7 +15,9 @@
 *.bak
 .coq-native/
 Makefile.coq
+Makefile.coq_bench
 Makefile.coq.conf
+Makefile.coq_bench.conf
 _CoqProject.*
 Makefile.package.*
 .Makefile.package.*

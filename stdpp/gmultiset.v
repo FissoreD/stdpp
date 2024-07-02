@@ -86,7 +86,7 @@ Section basic_lemmas.
     Check _ : ∀ A0 : Type, MapFold A A0 (gmap A A0).
     Check _ : EqDecision A.
     (* TODO: @FissoreD unification problem *)
-    Elpi Override TC TC.Solver None. (* Unification *)
+    Elpi TC Solver Deactivate TC.Solver. (* Unification *)
     apply map_eq; intros x.
     specialize (HXY x); unfold multiplicity in *; simpl in *.
     repeat case_match; naive_solver lia.
@@ -164,8 +164,7 @@ Section basic_lemmas.
   Global Instance gmultiset_elem_of_dec : RelDecision (∈@{gmultiset A}).
   Proof. refine (λ x X, cast_if (decide (0 < multiplicity x X))); done. Defined.
 End basic_lemmas.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.
 
 (** * A solver for multisets *)
 (** We define a tactic [multiset_solver] that solves goals involving multisets.
@@ -261,8 +260,7 @@ Section multiset_unfold.
   Proof. constructor.
     (* OLD: @FissoreD Here infinite loop *)
     unfold_leibniz. by apply set_unfold_multiset_equiv. Qed.
-  Elpi Override TC TC.Solver All.
-  Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+  Elpi TC Solver Activate TC.Solver.
 
   Global Instance set_unfold_multiset_subseteq X Y f g :
     (∀ x, MultisetUnfold x X (f x)) → (∀ x, MultisetUnfold x Y (g x)) →
@@ -504,7 +502,7 @@ Section more_lemmas.
     Proper ((≡ₚ) ==> (=)) (list_to_set_disj (C:=gmultiset A)).
   Proof. induction 1; multiset_solver. Qed.
 
-  Elpi Override TC TC.Solver None. (* Unification *)
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   (* TODO: @FissoreD here unification problem *)
 
   (** Properties of the elements operation *)
@@ -795,5 +793,4 @@ Section more_lemmas.
     apply Hinsert, IH; multiset_solver.
   Qed.
 End more_lemmas.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.

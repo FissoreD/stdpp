@@ -668,7 +668,7 @@ Section gset.
   Context `{Countable K}.
   (* Lift instances of operational TCs from [mapset] and mark them [simpl never]. *)
   Global Instance gset_elem_of: ElemOf K (gset K) := _.
-  Elpi Override TC TC.Solver None. (* Unification *)
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   Global Instance gset_empty : Empty (gset K) := _.
   Global Instance gset_singleton : Singleton K (gset K) := _.
   Global Instance gset_union: Union (gset K) := _.
@@ -798,8 +798,7 @@ Section gset.
 End gset.
 
 Global Typeclasses Opaque gset.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.
 
 Elpi Accumulate TC.Solver lp:{{ % unif
   tc-stdpp.base.tc-RelDecision A B C S :-

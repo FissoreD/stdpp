@@ -201,7 +201,7 @@ Proof.
   intros p; apply eq_bool_prop_intro, (HXY p).
 Qed.
 
-Elpi Override TC TC.Solver None. (* Unification *)
+Elpi TC Solver Deactivate TC.Solver. (* Unification *)
 Global Instance coPset_elem_of_dec : RelDecision (∈@{coPset}).
 Proof. solve_decision. Defined.
 Global Instance coPset_equiv_dec : RelDecision (≡@{coPset}).
@@ -472,5 +472,4 @@ Proof.
   setoid_rewrite coPset_infinite_finite.
   eapply coPset_split.
 Qed.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.

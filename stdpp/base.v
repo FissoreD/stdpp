@@ -16,7 +16,7 @@ From stdpp Require Import options.
 
 TC.AddAllClasses.
 TC.AddAllInstances.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Override TC.Solver Rm Proper ProperProxy RelationClasses.Equivalence.
 
 
 (** This notation is necessary to prevent [length] from being printed
@@ -761,8 +761,8 @@ Proof. intros [] []; reflexivity. Qed.
 Notation "( x ,.)" := (pair x) (only parsing) : stdpp_scope.
 Notation "(., y )" := (λ x, (x,y)) (only parsing) : stdpp_scope.
 
-Notation "p .1" := (fst p) (at level 2, left associativity, format "p .1").
-Notation "p .2" := (snd p) (at level 2, left associativity, format "p .2").
+Notation "p .1" := (fst p) (at level 1, left associativity, format "p .1").
+Notation "p .2" := (snd p) (at level 1, left associativity, format "p .2").
 
 Global Instance: Params (@pair) 2 := {}.
 Global Instance: Params (@fst) 2 := {}.

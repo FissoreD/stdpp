@@ -205,5 +205,3 @@ Proof. destruct X; set_solver. Qed.
 
 Global Typeclasses Opaque coGset_elem_of coGset_empty coGset_top coGset_singleton.
 Global Typeclasses Opaque coGset_union coGset_intersection coGset_difference.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.

@@ -107,7 +107,7 @@ Global Instance pretty_nat : Pretty nat := λ x, pretty (N.of_nat x).
 Global Instance pretty_nat_inj : Inj (=@{nat}) (=) pretty.
 Proof.
   (* TODO: @FissoreD unification problems *)
-  Elpi Override TC TC.Solver None. (* Unifcation *)
+  Elpi TC Solver Deactivate TC.Solver. (* Unifcation *)
   (* apply (compose_inj eq eq eq N.of_nat pretty Nat2N.inj' pretty_N_inj). *)
   apply _.
 Qed.
@@ -115,9 +115,7 @@ Qed.
 Global Instance pretty_positive : Pretty positive := λ x, pretty (Npos x).
 Global Instance pretty_positive_inj : Inj (=@{positive}) (=) pretty.
 Proof. apply _. Qed.
-
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.
 
 Global Instance pretty_Z : Pretty Z := λ x,
   match x with

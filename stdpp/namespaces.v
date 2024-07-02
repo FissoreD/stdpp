@@ -2,12 +2,12 @@ From stdpp Require Export countable coPset.
 From stdpp Require Import options.
 
 Definition namespace := list positive.
-Elpi Override TC TC.Solver None. (* Unification *)
+
+Elpi TC Solver Deactivate TC.Solver. (* Unification *)
 Global Instance namespace_eq_dec : EqDecision namespace := _.
 Global Instance namespace_countable : Countable namespace := _.
 Global Typeclasses Opaque namespace.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.
 
 Definition nroot : namespace := nil.
 
@@ -141,5 +141,4 @@ Ltac solve_ndisj :=
   end;
   solve [eauto 12 with ndisj].
 Global Hint Extern 1000 => solve_ndisj : solve_ndisj.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.

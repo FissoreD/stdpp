@@ -22,13 +22,11 @@ that bullets and curly braces must be used to structure the proof. *)
 this file everywhere.
 From stdpp Require Import options.
 *)
-From elpi Require Export tc.
+From elpi.apps Require Export tc.
 (* #[export] Elpi TC Set Time All. *)
 
 (* Uncomment following line to print stats *)
 Global Set Debug "elpitime".
-Global Set Debug "elpitime_get_and_compile".
-Global Set Debug "handle_takeover".
 Elpi Accumulate tc.db lp:{{
   :after "0"
   time-is-active _ :- !.

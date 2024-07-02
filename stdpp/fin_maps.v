@@ -3090,7 +3090,7 @@ Check _ : forall A, Lookup K _ (M A).
 (* TODO: @FissoreD non deterministic pruning, dalay to be implemented
   it seems that I receive a goal already not in PF
 *)
-Elpi Override TC TC.Solver None. (* @gares *)
+Elpi TC Solver Deactivate TC.Solver. (* @gares *)
 (** ** Properties of the [difference] operation *)
 Lemma lookup_difference {A} (m1 m2 : M A) i :
   (m1 ∖ m2) !! i = match m2 !! i with None => m1 !! i | _ => None end.
@@ -3098,8 +3098,7 @@ Proof.
   unfold difference, map_difference; rewrite lookup_difference_with.
   destruct (m1 !! i), (m2 !! i); done.
 Qed.
-Elpi Override TC TC.Solver All.
-Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+Elpi TC Solver Activate TC.Solver.
 
 Lemma lookup_difference_Some {A} (m1 m2 : M A) i x :
   (m1 ∖ m2) !! i = Some x ↔ m1 !! i = Some x ∧ m2 !! i = None.
@@ -4410,8 +4409,8 @@ Section map_compose.
   (* TODO: @FissoreD: 
     A problem to convert coq term to elpi
     Anomaly "File "src/coq_elpi_HOAS.ml", line 1300, characters 12-18: Assertion failed." *)
-
-  Elpi Override TC TC.Solver None. (*@gares *)
+  
+  Elpi TC Solver Deactivate TC.Solver. (*@gares *)
   (** Alternative definition of [m ∘ₘ n] by recursion on [n] *)
   Lemma map_compose_as_fold m n :
     m ∘ₘ n = map_fold (λ a b,
@@ -4446,8 +4445,7 @@ Section map_compose.
     apply map_eq; intros a. rewrite !map_lookup_compose, map_lookup_filter.
     destruct (n !! a) as [b|] eqn:?; simpl; [|done]. by destruct (m !! b) eqn:?.
   Qed.
-  Elpi Override TC TC.Solver All.
-  Elpi Override TC - Proper ProperProxy RelationClasses.Equivalence.
+  Elpi TC Solver Activate TC.Solver.
 
   Lemma map_compose_insert_Some m n a b c :
     m !! b = Some c →

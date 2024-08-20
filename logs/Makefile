@@ -58,3 +58,7 @@ plot83:
 # Here, we use coq8.20 hook
 plot104:
 	python ../scripts/parse_elpi_stat.py stat_w_time_10.log stat_w_time_no_elpi_04.log 
+
+# Here, we use new (faster) goal compiler
+plot11-11:
+	python ../scripts/parse_elpi_stat.py stat_11_elpi.log stat_11_coq.log 

@@ -102,14 +102,14 @@ involving just [∈]. For example, [A → x ∈ X ∪ ∅] becomes [A → x ∈ 
 This transformation is implemented using type classes instead of setoid
 rewriting to ensure that we traverse each term at most once and to be able to
 deal with occurences of the set operations under binders. *)
-(*TC.Pending_mode + -.*)
+TC.Pending_mode + -.
 Class SetUnfold (P Q : Prop) := { set_unfold : P ↔ Q }.
 Global Arguments set_unfold _ _ {_} : assert.
 Global Hint Mode SetUnfold + - : typeclass_instances. (*Mode also added in elpi*)
 
 (** The class [SetUnfoldElemOf] is a more specialized version of [SetUnfold]
 for propositions of the shape [x ∈ X] to improve performance. *)
-(*TC.Pending_mode + + + - + -.*)
+TC.Pending_mode + + + - + -.
 Class SetUnfoldElemOf `{ElemOf A C} (x : A) (X : C) (Q : Prop) :=
   { set_unfold_elem_of : x ∈ X ↔ Q }.
 Global Arguments set_unfold_elem_of {_ _ _} _ _ _ {_} : assert.
@@ -124,6 +124,11 @@ Proof. by destruct 1; constructor. Qed.
 
 Class SetUnfoldSimpl (P Q : Prop) := { set_unfold_simpl : SetUnfold P Q }.
 Global Hint Extern 0 (SetUnfoldSimpl _ _) => csimpl; constructor : typeclass_instances.
+
+Elpi Accumulate TC.Solver lp:{{ % hint extern
+  tc-stdpp.sets.tc-SetUnfoldSimpl P Q {{Build_SetUnfoldSimpl lp:P lp:Q lp:S}} :-
+    tc-stdpp.sets.tc-SetUnfold P Q S.
+}}.
 
 Global Instance set_unfold_default P : SetUnfold P P | 1000. done. Qed.
 Definition set_unfold_1 `{SetUnfold P Q} : P → Q := proj1 (set_unfold P Q).

@@ -24,7 +24,7 @@ folds a function [f] over each element of the map [m]. The order in which the
 elements are passed to [f] is unspecified. *)
 
 (* TODO: @FissoreD Here multiple modes... *)
-(*TC.Pending_mode - - -.*)
+TC.Pending_mode - - -.
 Class MapFold K A M := map_fold B : (K → A → B → B) → B → M → B.
 Global Arguments map_fold {_ _ _ _ _} _ _ _.
 Global Hint Mode MapFold - - ! : typeclass_instances. (*Mode also added in elpi*)
@@ -238,10 +238,10 @@ Proof.
     done || etrans; eauto.
 Qed.
 Elpi Accumulate TC.Solver lp:{{ % unif
-  tc-Coq.Classes.RelationClasses.tc-PreOrder A (app[{{@subseteq}}|_] as T) S :-
+  tc-Stdlib.Classes.RelationClasses.tc-PreOrder A (app[{{@subseteq}}|_] as T) S :-
     T' = {{@map_included _ _ _ _ _}},
     coq.unify-eq T T' ok,
-    tc-Coq.Classes.RelationClasses.tc-PreOrder A T' S.
+    tc-Stdlib.Classes.RelationClasses.tc-PreOrder A T' S.
 }}.
 Global Instance map_subseteq_po {A} : PartialOrder (⊆@{M A}).
 Proof.

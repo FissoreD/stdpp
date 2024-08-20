@@ -26,11 +26,11 @@ From elpi.apps Require Export tc.
 (* #[export] Elpi TC Set Time All. *)
 
 (* Uncomment following line to print stats *)
-Global Set Debug "elpitime".
+(* Global Set Debug "elpitime".
 Elpi Accumulate tc.db lp:{{
   :after "0"
   time-is-active _ :- !.
-}}.
+}}. *)
 
 Elpi Accumulate TC.Solver lp:{{
   pred is-seal-mode i:sealed-goal, o:sealed-goal.
@@ -46,11 +46,13 @@ Elpi Accumulate TC.Solver lp:{{
   type seal-mode sealed-goal -> sealed-goal.
 
   :after "0"
-  refine-proof tc.mode_fail G [seal-mode (seal G)] :- !.
+  % tc.refine-proof tc.tc.mode_fail G [seal-mode (seal G)] :- !.
+  tc.refine-proof tc.tc.mode_fail G [seal-mode (seal G)] :- !.
   :after "0" 
   msolve L N :-
     std.length L Len,
-    time-it oTC-time-msolve (coq.ltac.all (coq.ltac.open solve-aux) L N') "msolve",
+    % tc.time-it tc.oTC-time-msolve (coq.ltac.all (coq.ltac.open tc.solve-aux) L N') "msolve",
+    tc.time-it tc.oTC-time-msolve (coq.ltac.all (coq.ltac.open tc.solve-aux) L N') "msolve",
     partition-clean-s-mode N' SealMode Seal,
     if2 (SealMode = []) (N = N') 
         (std.length SealMode Len) (N = SealMode)
@@ -59,3 +61,5 @@ Elpi Accumulate TC.Solver lp:{{
   msolve L _ :-
     coq.ltac.fail _ "[TC] fail to solve" L.
 }}.
+Set Warnings "+elpi".
+Elpi Typecheck TC.Solver.

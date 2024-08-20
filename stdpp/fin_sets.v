@@ -258,10 +258,7 @@ Lemma set_wf : well_founded (⊂@{C}).
 Proof. apply (wf_projected (<) size); auto using subset_size, lt_wf. Qed.
 
 Lemma aa: ∀ x X, (exists Q, SetUnfold (X ∖ {[x]} ⊂ X) Q).
-eexists.
-  (* TC.Solver should apply set_unfold_subset *)
-  apply _.
-Defined.
+Proof. eexists; apply _. Defined.
 
 Check eq_refl : aa = fun _ _ => ex_intro _ _ (set_unfold_subset _ _ _ _ _ _).
 

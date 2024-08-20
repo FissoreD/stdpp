@@ -3,7 +3,7 @@ From stdpp Require Import relations numbers.
 From Coq Require Import Ascii.
 From stdpp Require Import options.
 
-(*TC.Pending_mode !.*)
+TC.Pending_mode !.
 Class Pretty A := pretty : A → string.
 Global Hint Mode Pretty ! : typeclass_instances. (*Mode also added in elpi*)
 

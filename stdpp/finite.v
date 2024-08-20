@@ -6,14 +6,14 @@ Elpi Query lp:{{
   coq.option.add ["TC", "allow", "evar"] (coq.option.bool ff) ff.
 }}.
 
-Elpi Accumulate TC.Solver lp:{{ % TC allow evar
+(* Elpi Accumulate TC.Solver lp:{{ % TC allow evar
   :before "0"
-  solve-aux G L :-
+  tc.solve-aux G L :-
     coq.option.get ["TC", "allow", "evar"] (coq.option.bool tt), !,
     L = [seal G].
-}}.
+}}. *)
 
-(* Elpi TC.Pending_mode ! -. *)
+Elpi TC.Pending_mode ! -.
 Class Finite A `{EqDecision A} := {
   enum : list A;
   (* [NoDup] makes it easy to define the cardinality of the type. *)

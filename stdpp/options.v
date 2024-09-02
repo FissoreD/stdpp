@@ -29,7 +29,7 @@ From elpi.apps Require Export tc.
 (* Global Set Debug "elpitime".
 Elpi Accumulate tc.db lp:{{
   :after "0"
-  time-is-active _ :- !.
+  tc.time-is-active _ :- !.
 }}. *)
 
 Elpi Accumulate TC.Solver lp:{{

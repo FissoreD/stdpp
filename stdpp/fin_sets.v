@@ -8,11 +8,6 @@ From stdpp Require Import options.
 (* Pick up extra assumptions from section parameters. *)
 Set Default Proof Using "Type*".
 
-Elpi Command B.
-Elpi Query lp:{{
-  coq.option.add ["TC", "allow", "evar1"] (coq.option.bool ff) ff.
-}}.
-
 (** Operations *)
 Global Instance set_size `{Elements A C} : Size C := length ∘ elements.
 Global Typeclasses Opaque set_size.

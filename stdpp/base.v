@@ -1033,7 +1033,7 @@ Elpi Accumulate TC.Solver lp:{{ % unif
       std.map L1 remove_equiv_sum_equiv L2.
     remove_equiv_sum_equiv A A.
     
-    :after "lastHook" 
+    % :after "lastHook" 
     tc-stdpp.base.tc-Inj A B R1 R2 F S :-
       remove_equiv_sum_equiv R2 R2',
       if (same_term R2 R2') fail

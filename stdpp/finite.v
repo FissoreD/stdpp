@@ -1,18 +1,6 @@
 From stdpp Require Export countable vector.
 From stdpp Require Import options.
 
-Elpi Command A.
-Elpi Query lp:{{
-  coq.option.add ["TC", "allow", "evar"] (coq.option.bool ff) ff.
-}}.
-
-(* Elpi Accumulate TC.Solver lp:{{ % TC allow evar
-  :before "0"
-  tc.solve-aux G L :-
-    coq.option.get ["TC", "allow", "evar"] (coq.option.bool tt), !,
-    L = [seal G].
-}}. *)
-
 Elpi TC.Pending_mode ! -.
 Class Finite A `{EqDecision A} := {
   enum : list A;
@@ -326,9 +314,7 @@ Qed.
 Next Obligation.
   intros ?????? [a b]. apply elem_of_list_bind.
   exists a.
-  Set TC allow evar. (* TODO: @DavideF This is a hack... *)
   eauto using elem_of_enum, elem_of_list_fmap_1.
-  Unset TC allow evar.
 Qed.
 Lemma prod_card `{Finite A} `{Finite B} : card (A * B) = card A * card B.
 Proof.

@@ -50,7 +50,7 @@ Elpi Accumulate TC.Pending_mode lp:{{
   main _.
   % :after "0" main _.
 }}.
-Elpi Command TC.Solver.
+Elpi Tactic TC.Solver.
 Elpi Accumulate TC.Solver lp:{{
   main _.
   % :after "0" main _.

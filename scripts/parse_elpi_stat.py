@@ -23,6 +23,7 @@ import numpy as np
 
 # Rows to filter
 F_ELPI_QUERY = "Elpi: query"
+F_ELPI_OPTIME = "Elpi-optim:"
 F_ELPI_GET_AND_COMPILE = "Elpi: get_and_compile"
 F_ELPI_TC = "\[TC\] - Time"
 F_COMPILE = "COQC .*.v"
@@ -36,8 +37,9 @@ TOTAL = "TOTAL"           # The sum of everything
 L_COMPILE = "Compiler for Instance,Compiler for Class,Compile Instance,build query,compile context, normalize ty,resolve_all_evars".split(",")
 L_ELPI_TC = "mode check,refine.typecheck,msolve,full instance search, instance search".split(",")
 L_ELPITIME = "query-compilation,static-check,optimization,runtime".split(",")
+L_ELPITME_OPTIM = "chr,add_indexing,compile_clause,make_index,compiler_symb_table,pred_list,build_hash_tbl,compile_tbl,initial_runtime_state".split(",")
 L_ELPI_GET_AND_COMPILE = "get_and_compile"
-ALL_KEYS = L_COMPILE + L_ELPI_TC + L_ELPITIME
+ALL_KEYS = L_COMPILE + L_ELPI_TC + L_ELPITIME + L_ELPITME_OPTIM
 L_TOT_MINUS_ELPITIME = "elpitot - elpitime"   # Time computed as de difference between L_TIME_ELPI and the sum of L_ELPI_GET_AND_COMPILE + L_ELPITIME
 
 FAIL = "fail"
@@ -134,7 +136,7 @@ def build_next_rows(lines):
     return all_rows
 
 def get_stat_without_elpi(ch, rows_f2):
-    return rows_f2[ch] #.get(ch, 0)
+    return rows_f2.get(ch, 0)
 
 def get_stats(lines, f2=dict()):
     d = dict()
@@ -168,6 +170,12 @@ def get_stats(lines, f2=dict()):
             for i, k in enumerate(L_ELPITIME):
                 add_dico_aux(fname, row_name1, k, fl[i])
                 add_dico_aux(fname, row_name1, L_TOT_MINUS_ELPITIME, -fl[i])
+        elif F_ELPI_OPTIME in l:
+            row_name1 = next_row(row_pos)
+            assert(len(fl) == 9)
+            for i, k in enumerate(L_ELPITME_OPTIM):
+                add_dico_aux(fname, row_name1, k, fl[i])
+                # add_dico_aux(fname, row_name1, L_TOT_MINUS_ELPITIME, -fl[i])
 
         elif match_rex(F_ELPI_TC, l):
             row_name1 =  next_row(row_pos)
@@ -191,6 +199,7 @@ def write_all_to_dico(d, fname="stat.csv"):
     with open(fname, 'w') as f:
         all_keys = list(L_COMPILE + L_ELPI_TC + [L_ELPI_GET_AND_COMPILE])
         all_keys.extend(L_ELPITIME)
+        all_keys.extend(L_ELPITME_OPTIM)
         if WITH_FAIL:
             for i in L_ELPI_TC: 
                 all_keys.append(build_fail_key(i))
@@ -251,6 +260,12 @@ def all_files_to_plot(d, plot_name="plot.svg"):
                 old_sum = 0
             new_sum = old_sum + (d11.get(col, 0))
             d1[col].append(new_sum)
+    
+    # d1["refine.typecheck"] = []
+    # for fnamei, fname in enumerate(fnames):
+    #     d11 = d[fname][TOTAL] if TOTAL in d[fname] else dict()
+    #     d1["refine.typecheck"].append(d11.get("refine.typecheck", 0) + d11.get(L_TOT_MINUS_ELPITIME, 0))
+    # cols.insert(1, "refine.typecheck")
 
     coq_t = []
     for fname in fnames:

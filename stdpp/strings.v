@@ -136,10 +136,12 @@ Module String.
 
   Definition le (s1 s2 : string) : Prop := String.leb s1 s2.
 
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   Global Instance le_dec : RelDecision le.
   Proof. intros s1 s2. apply _. Defined.
   Global Instance le_pi s1 s2 : ProofIrrel (le s1 s2).
   Proof. apply _. Qed.
+  Elpi TC Solver Activate TC.Solver. (* Unification *)
 
   Global Instance le_po : PartialOrder le.
   Proof.

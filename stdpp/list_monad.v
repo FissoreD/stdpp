@@ -849,6 +849,7 @@ Proof.
   intros. apply (foldr_cons_permute_strong (=) f a).
   intros j1 a1 j2 a2 b _ _ _. by rewrite !(assoc_L f), (comm_L f a1).
 Qed.
+Elpi TC.AddInstances 100 flip_PreOrder.
 
 (** The following lemma shows that folding over a list twice (using the result
 of the first fold as input for the second fold) is equivalent to folding over

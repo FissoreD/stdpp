@@ -243,6 +243,7 @@ simplifies occurrences of [multiplicity x {[ y ]}] as follows:
 The tests [test_big_X] in [tests/multiset_solver.v] show the second step reduces
 the running time significantly (from >10 seconds to <1 second). *)
 
+TC.Pending_mode + + + - + -.
 Class MultisetUnfold `{Countable A} (x : A) (X : gmultiset A) (n : nat) :=
   { multiset_unfold : multiplicity x X = n }.
 Global Arguments multiset_unfold {_ _ _} _ _ _ {_} : assert.
@@ -281,10 +282,13 @@ Section multiset_unfold.
     MultisetUnfold x X n →
     MultisetUnfold x (m *: X) (m * n).
   Proof. intros [HX]; constructor. by rewrite multiplicity_scalar_mul, HX. Qed.
+  Elpi TC Deactivate Observer TC.Compiler.
+  (* Elpi TC Observer Deactivate TC.Compiler. Unification *)
   Global Instance multiset_unfold_filter (P : A → Prop) `{!∀ x, Decision (P x)} x X n :
     MultisetUnfold x X n →
     MultisetUnfold x (filter P X) (if decide (P x) then n else 0).
   Proof. intros [HX]; constructor. by rewrite multiplicity_filter, HX. Qed.
+  Elpi TC Activate Observer TC.Compiler.
 
   Global Instance set_unfold_multiset_equiv X Y f g :
     (∀ x, MultisetUnfold x X (f x)) → (∀ x, MultisetUnfold x Y (g x)) →
@@ -544,6 +548,8 @@ Section more_lemmas.
 
     Lemma gmultiset_filter_empty : filter P ∅ =@{gmultiset A} ∅.
     Proof. multiset_solver. Qed.
+
+    Elpi TC Solver Deactivate TC.Solver. (* Unification *)
 
     Lemma gmultiset_filter_singleton x :
       filter P {[+ x +]} =@{gmultiset A} if decide (P x) then {[+ x +]} else ∅.
@@ -875,6 +881,7 @@ Section more_lemmas.
     rewrite (gmultiset_disj_union_difference X Y),
       gmultiset_size_disj_union by auto using gmultiset_subset_subseteq. lia.
   Qed.
+  Elpi TC Solver Deactivate TC.Solver.
 
   Lemma gmultiset_filter_subseteq (P : A → Prop) `{!∀ x, Decision (P x)} X :
     filter P X ⊆ X.
@@ -1039,3 +1046,4 @@ Section disj_union_list.
     Proper ((≡ₚ) ==> (=)) (@disj_union_list (gmultiset A) _ _).
   Proof. apply (foldr_permutation_proper' _); apply _. Qed.
 End disj_union_list.
+Elpi TC Solver Activate TC.Solver.

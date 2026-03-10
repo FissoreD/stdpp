@@ -1,5 +1,6 @@
 From stdpp Require Export numbers base option.
 From stdpp Require Import options.
+Elpi TC Solver Override TC.Solver Rm Proper ProperProxy RelationClasses.Equivalence.
 
 Module Export list.
 
@@ -19,6 +20,19 @@ Notation tail := tl.
 
 Notation take := firstn.
 Notation drop := skipn.
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-RelDecision A B {{le}} S :-
+    tc-stdpp.base.tc-RelDecision A B {{Nat.le}} S.
+  tc-stdpp.base.tc-Inj A B C D {{S}} S :-
+    tc-stdpp.base.tc-Inj A B C D {{Nat.succ}} S.
+}}.
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  % Manual unfold of compose
+  tc-stdpp.base.tc-Decision (app [{{@compose}},_,_,_,F1,F2,X]) S :-
+    tc-stdpp.base.tc-Decision (app[F1,app[F2, X]]) S.
+}}.
 
 Global Arguments head {_} _ : assert.
 Global Arguments tail {_} _ : assert.

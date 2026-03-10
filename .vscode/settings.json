@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+    "**/*.aux": true,
+    "**/*.vo": true,
+    "**/*.vok": true,
+    "**/*.vos": true,
+    "**/*.glob": true,
+  },
+  "ocaml.sandbox": {
+    "kind": "opam",
+    "switch": "/home/dfissore/Documents/github/PhD-manuscript/coq-elpi-tc"
+  }
+}

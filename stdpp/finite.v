@@ -1,6 +1,7 @@
 From stdpp Require Export countable vector.
 From stdpp Require Import options.
 
+TC.Pending_mode ! -.
 Class Finite A `{EqDecision A} := {
   enum : list A;
   (* [NoDup] makes it easy to define the cardinality of the type. *)
@@ -26,6 +27,7 @@ Next Obligation.
   destruct (list_find_Some (x =.) xs i y); naive_solver.
 Qed.
 Global Hint Immediate finite_countable : typeclass_instances.
+Elpi TC.AddInstances 0 finite_countable.
 
 Definition find `{Finite A} (P : A → Prop) `{∀ x, Decision (P x)} : option A :=
   list_find P (enum A) ≫= decode_nat ∘ fst.

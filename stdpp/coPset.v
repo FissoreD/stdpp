@@ -233,6 +233,7 @@ Global Typeclasses Opaque coPset.
 Global Instance coPset_eq_dec : EqDecision coPset.
 Proof. unfold coPset; apply _. Defined.
 
+Elpi TC Solver Deactivate TC.Solver. (* Unification *)
 Global Instance coPset_countable : Countable coPset.
 Proof. unfold coPset; apply _. Defined.
 
@@ -610,3 +611,4 @@ Proof.
   setoid_rewrite coPset_infinite_finite.
   eapply coPset_split.
 Qed.
+Elpi TC Solver Activate TC.Solver. (* Unification *)

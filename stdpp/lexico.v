@@ -94,8 +94,11 @@ Proof.
   end eq_refl).
 Defined.
 
+Elpi TC Solver Deactivate TC.Solver. (* Unification *)
 Global Instance N_lexico_po : StrictOrder (@lexico N _).
 Proof. unfold lexico, N_lexico. apply _. Qed.
+Elpi TC Solver Activate TC.Solver. (* Unification *)
+
 Global Instance N_lexico_trichotomy: TrichotomyT (@lexico N _).
 Proof.
  red; refine (λ n1 n2,
@@ -106,8 +109,10 @@ Proof.
   end eq_refl).
 Defined.
 
+Elpi TC Solver Deactivate TC.Solver. (* Unification *)
 Global Instance Z_lexico_po : StrictOrder (@lexico Z _).
 Proof. unfold lexico, Z_lexico. apply _. Qed.
+Elpi TC Solver Activate TC.Solver. (* Unification *)
 Global Instance Z_lexico_trichotomy: TrichotomyT (@lexico Z _).
 Proof.
  red; refine (λ n1 n2,

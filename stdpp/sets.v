@@ -9,6 +9,34 @@ From stdpp Require Import options.
 locally (or things moved out of sections) as no default works well enough. *)
 Unset Default Proof Using.
 
+    Elpi TC Solver Override TC.Solver All.
+    Elpi TC Solver Override TC.Solver Rm Proper ProperProxy RelationClasses.Equivalence.
+
+
+Elpi Accumulate  TC.Solver lp:{{ % hack-8-17
+  func propagate-Prop-constraint-inward i:term.
+  propagate-Prop-constraint-inward {{ forall x : lp:Ty, lp:(F x) }} :- !,
+    @pi-decl `x` Ty x\
+      propagate-Prop-constraint-inward (F x).
+  propagate-Prop-constraint-inward {{ lp:A /\ lp:B  }} :- !,
+    propagate-Prop-constraint-inward A,
+    propagate-Prop-constraint-inward B.
+  propagate-Prop-constraint-inward {{ lp:A \/ lp:B }} :- !,
+    propagate-Prop-constraint-inward A,
+    propagate-Prop-constraint-inward B.
+  propagate-Prop-constraint-inward {{ ~ lp:A }} :- !,
+    propagate-Prop-constraint-inward A.
+  propagate-Prop-constraint-inward (uvar as X) :- !,
+    coq.typecheck X {{ Prop }} ok.
+  propagate-Prop-constraint-inward (app[uvar|_] as X) :- !,
+    coq.typecheck X {{ Prop }} ok.
+  propagate-Prop-constraint-inward _. % no-op in all other cases
+
+  :before "coq-assign-evar-raw"
+  evar X Ty R :- not(var R), same_term Ty {{ Prop }}, coq.version _ _ _ _, !,
+    propagate-Prop-constraint-inward R, coq.typecheck R Ty ok, X = R.
+}}.
+
 (* Higher precedence to make sure these instances are not used for other types
 with an [ElemOf] instance, such as lists. *)
 Global Instance set_equiv_instance `{ElemOf A C} : Equiv C | 20 := λ X Y,
@@ -96,12 +124,14 @@ involving just [∈]. For example, [A → x ∈ X ∪ ∅] becomes [A → x ∈ 
 This transformation is implemented using type classes instead of setoid
 rewriting to ensure that we traverse each term at most once and to be able to
 deal with occurrences of the set operations under binders. *)
+TC.Pending_mode + -.
 Class SetUnfold (P Q : Prop) := { set_unfold : P ↔ Q }.
 Global Arguments set_unfold _ _ {_} : assert.
 Global Hint Mode SetUnfold + - : typeclass_instances.
 
 (** The class [SetUnfoldElemOf] is a more specialized version of [SetUnfold]
 for propositions of the shape [x ∈ X] to improve performance. *)
+TC.Pending_mode + + + - + -.
 Class SetUnfoldElemOf `{ElemOf A C} (x : A) (X : C) (Q : Prop) :=
   { set_unfold_elem_of : x ∈ X ↔ Q }.
 Global Arguments set_unfold_elem_of {_ _ _} _ _ _ {_} : assert.
@@ -116,6 +146,11 @@ Proof. by destruct 1; constructor. Qed.
 
 Class SetUnfoldSimpl (P Q : Prop) := { set_unfold_simpl : SetUnfold P Q }.
 Global Hint Extern 0 (SetUnfoldSimpl _ _) => csimpl; constructor : typeclass_instances.
+
+Elpi Accumulate TC.Solver lp:{{ % hint extern
+  tc-stdpp.sets.tc-SetUnfoldSimpl P Q {{Build_SetUnfoldSimpl lp:P lp:Q lp:S}} :-
+    tc-stdpp.sets.tc-SetUnfold P Q S.
+}}.
 
 Global Instance set_unfold_default P : SetUnfold P P | 1000. done. Qed.
 Definition set_unfold_1 `{SetUnfold P Q} : P → Q := proj1 (set_unfold P Q).
@@ -372,6 +407,13 @@ Tactic Notation "set_solver" "+" hyp_list(Hs) := clear -Hs; set_solver.
 Global Hint Extern 1000 (_ ∉ _) => set_solver : set_solver.
 Global Hint Extern 1000 (_ ∈ _) => set_solver : set_solver.
 Global Hint Extern 1000 (_ ⊆ _) => set_solver : set_solver.
+Elpi TC.AddInstances 0 set_unfold_and.
+Elpi TC.AddInstances 0 set_unfold_iff.
+Elpi TC.AddInstances 0 set_unfold_impl.
+Elpi TC.AddInstances 0 set_unfold_or.
+Elpi TC.AddInstances 0 set_unfold_not.
+Elpi TC.AddInstances 0 set_unfold_exist.
+Elpi TC.AddInstances 1 set_unfold_forall.
 
 
 (** * Sets with [∪], [∅] and [{[_]}] *)

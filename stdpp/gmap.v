@@ -598,10 +598,19 @@ Proof. destruct m as [|t]; [done|]. apply lookup_pmap_ne_to_gmap_dep_ne. Qed.
 (** * Finite sets *)
 Definition gset K `{Countable K} := mapset (gmap K).
 
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-ElemOf A B S :-
+    B = {{@gset _ _ _}},
+    C = {{@mapset' _}},
+    coq.unify-eq B C ok,
+    tc-stdpp.base.tc-ElemOf A C S.
+}}.
+
 Section gset.
   Context `{Countable K}.
   (* Lift instances of operational TCs from [mapset] and mark them [simpl never]. *)
   Global Instance gset_elem_of: ElemOf K (gset K) := _.
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   Global Instance gset_empty : Empty (gset K) := _.
   Global Instance gset_singleton : Singleton K (gset K) := _.
   Global Instance gset_union: Union (gset K) := _.
@@ -735,6 +744,7 @@ Section gset.
       rewrite IH. done.
   Qed.
 End gset.
+Elpi TC Solver Deactivate TC.Solver.
 
 Section gset_cprod.
   Context `{Countable A, Countable B}.
@@ -758,3 +768,12 @@ Section gset_cprod.
 End gset_cprod.
 
 Global Typeclasses Opaque gset.
+Elpi TC Solver Activate TC.Solver.
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-RelDecision A B C S :-
+    C = {{@elem_of _ _ (@elem_of _ _ _)}}, !,
+    D = {{@elem_of _ _ (@gset_elem_of _ _ _)}},
+    coq.unify-eq C D ok,
+    tc-stdpp.base.tc-RelDecision A B D S.
+}}.

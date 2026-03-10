@@ -235,7 +235,9 @@ Lemma size_dom `{!Elements K D, !FinSet K D} {A} (m : M A) :
 Proof.
   induction m as [|i x m ? IH] using map_ind.
   { by rewrite dom_empty, map_size_empty, size_empty. }
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   assert ({[i]} ## dom m).
+  Elpi TC Solver Activate TC.Solver. (* Unification *)
   { intros j. rewrite elem_of_dom. unfold is_Some. set_solver. }
   by rewrite dom_insert, size_union, size_singleton, map_size_insert_None, IH.
 Qed.
@@ -501,7 +503,9 @@ Proof.
   apply not_elem_of_dom in Hk. rewrite dom_insert in Hm'.
   assert (k' ∈ set_map (D:=D2) f X) as (k & -> & ?)%elem_of_map by set_solver.
   destruct (IH (X ∖ {[ k ]})) as (m & -> & HX').
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   { rewrite (set_map_difference _), <-Hm'. set_solver. }
+  Elpi TC Solver Activate TC.Solver. (* Unification *)
   exists (<[k:=x]> m). split; [by rewrite kmap_insert|].
   rewrite dom_insert, HX'. intros k''. destruct (decide (k'' = k)); set_solver.
 Qed.

@@ -97,6 +97,7 @@ Section infinite.
     end.
   Next Obligation. done. Qed.
   Next Obligation. done. Qed.
+  Elpi TC Solver Deactivate TC.Solver. (* Unification *)
   Next Obligation. intros ??? X -> x []%not_elem_of_empty. Qed.
   Next Obligation.
     intros ??? X HX Hdisj. destruct (set_choose_L X) as [x ?]; first done.
@@ -109,6 +110,8 @@ Section infinite.
   Qed.
   Next Obligation. intros ??? Hdisj. by apply (Hdisj inhabitant). Qed.
 
+  Elpi TC Solver Activate TC.Solver. (* Unification *)
+  
   Global Instance topGset_subseteq_dec : RelDecision (⊆@{topGset A}).
   Proof.
     refine (λ X Y, cast_if (decide (X ∪ Y = Y)));

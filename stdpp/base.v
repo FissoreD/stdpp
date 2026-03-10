@@ -18,6 +18,12 @@ From Stdlib Require ssreflect.
 
 From stdpp Require Import options.
 
+From elpi.apps Require Import tc.
+
+TC.AddAllClasses.
+TC.AddAllInstances.
+Elpi TC Solver Override TC.Solver Rm Proper ProperProxy RelationClasses.Equivalence.
+
 (** This notation is necessary to prevent [length] from being printed
 as [strings.length] if strings.v is imported and later base.v. See
 also strings.v and
@@ -135,12 +141,14 @@ avoid the need to derive [P] twice. *)
 Inductive TCOr (P1 P2 : Prop) : Prop :=
   | TCOr_l : P1 → TCOr P1 P2
   | TCOr_r : P2 → TCOr P1 P2.
+TC.Pending_mode ! !.
 Existing Class TCOr.
 Global Existing Instance TCOr_l | 9.
 Global Existing Instance TCOr_r | 10.
 Global Hint Mode TCOr ! ! : typeclass_instances.
 
 Inductive TCAnd (P1 P2 : Prop) : Prop := TCAnd_intro : P1 → P2 → TCAnd P1 P2.
+TC.Pending_mode ! !.
 Existing Class TCAnd.
 Global Existing Instance TCAnd_intro.
 Global Hint Mode TCAnd ! ! : typeclass_instances.
@@ -165,6 +173,7 @@ Notation TCUnless P := (TCIf P TCFalse TCTrue).
 Inductive TCForall {A} (P : A → Prop) : list A → Prop :=
   | TCForall_nil : TCForall P []
   | TCForall_cons x xs : P x → TCForall P xs → TCForall P (x :: xs).
+TC.Pending_mode ! ! !.
 Existing Class TCForall.
 Global Existing Instance TCForall_nil.
 Global Existing Instance TCForall_cons.
@@ -177,6 +186,7 @@ Inductive TCForall2 {A B} (P : A → B → Prop) : list A → list B → Prop :=
   | TCForall2_nil : TCForall2 P [] []
   | TCForall2_cons x y xs ys :
      P x y → TCForall2 P xs ys → TCForall2 P (x :: xs) (y :: ys).
+TC.Pending_mode ! ! ! ! -.
 Existing Class TCForall2.
 Global Existing Instance TCForall2_nil.
 Global Existing Instance TCForall2_cons.
@@ -186,6 +196,7 @@ Global Hint Mode TCForall2 ! ! ! - ! : typeclass_instances.
 Inductive TCExists {A} (P : A → Prop) : list A → Prop :=
   | TCExists_cons_hd x l : P x → TCExists P (x :: l)
   | TCExists_cons_tl x l: TCExists P l → TCExists P (x :: l).
+TC.Pending_mode ! ! !.
 Existing Class TCExists.
 Global Existing Instance TCExists_cons_hd | 10.
 Global Existing Instance TCExists_cons_tl | 20.
@@ -194,6 +205,7 @@ Global Hint Mode TCExists ! ! ! : typeclass_instances.
 Inductive TCElemOf {A} (x : A) : list A → Prop :=
   | TCElemOf_here xs : TCElemOf x (x :: xs)
   | TCElemOf_further y xs : TCElemOf x xs → TCElemOf x (y :: xs).
+TC.Pending_mode ! ! !.
 Existing Class TCElemOf.
 Global Existing Instance TCElemOf_here.
 Global Existing Instance TCElemOf_further.
@@ -206,6 +218,7 @@ see https://gitlab.mpi-sws.org/iris/iris/merge_requests/391 for a use case.
 Mode [-] is harmless, the only instance of [TCEq] is [TCEq_refl] below, so we
 cannot create loops. *)
 Inductive TCEq {A} (x : A) : A → Prop := TCEq_refl : TCEq x x.
+TC.Pending_mode ! - -.
 Existing Class TCEq.
 Global Existing Instance TCEq_refl.
 Global Hint Mode TCEq ! - - : typeclass_instances.
@@ -217,6 +230,7 @@ Proof. split; destruct 1; reflexivity. Qed.
 before proving the goal by reflexivity. Similar to [TCEq], the argument [x]
 is the input and [y] the output. When solving [TCEq x y], the argument [x]
 should be a concrete term and [y] an evar for the [simpl]ed result. *)
+TC.Pending_mode ! - -.
 Class TCSimpl {A} (x x' : A) := TCSimpl_TCEq : TCEq x x'.
 Global Hint Extern 0 (TCSimpl _ _) =>
   (* Since the second argument should be an evar, we can call [simpl] on the
@@ -227,6 +241,7 @@ Global Hint Mode TCSimpl ! - - : typeclass_instances.
 Lemma TCSimpl_eq {A} (x1 x2 : A) : TCSimpl x1 x2 ↔ x1 = x2.
 Proof. apply TCEq_eq. Qed.
 
+TC.Pending_mode ! ! ! -.
 Inductive TCDiag {A} (C : A → Prop) : A → A → Prop :=
   | TCDiag_diag x : C x → TCDiag C x x.
 Existing Class TCDiag.
@@ -284,6 +299,7 @@ Proof. split; repeat intro; congruence. Qed.
 (** We define an operational type class for setoid equality, i.e., the
 "canonical" equivalence for a type. The typeclass is tied to the \equiv
 symbol. This is based on (Spitters/van der Weegen, 2011). *)
+TC.Pending_mode !.
 Class Equiv A := equiv: relation A.
 Global Hint Mode Equiv ! : typeclass_instances.
 
@@ -321,6 +337,7 @@ reverse.
 
 Various std++ tactics assume that this class is only instantiated if [≡]
 is an equivalence relation. *)
+TC.Pending_mode ! !.
 Class LeibnizEquiv A `{Equiv A} :=
   leibniz_equiv (x y : A) : x ≡ y → x = y.
 Global Hint Mode LeibnizEquiv ! ! : typeclass_instances.
@@ -375,6 +392,7 @@ Global Hint Mode Equivalence - ! : typeclass_instances.
 (** ** Decidable propositions *)
 (** This type class by (Spitters/van der Weegen, 2011) collects decidable
 propositions. *)
+TC.Pending_mode !.
 Class Decision (P : Prop) := decide : {P} + {¬P}.
 Global Hint Mode Decision ! : typeclass_instances.
 Global Arguments decide _ {_} : simpl never, assert.
@@ -393,6 +411,7 @@ an explicit class instead of a notation for two reasons:
   [decide (f x = f y)], this would then lead to evaluation of [f x] and [f y].
   Using the [RelDecision], the [f] is hidden under a lambda, which prevents
   unnecessary evaluation. *)
+TC.Pending_mode ! ! !.
 Class RelDecision {A B} (R : A → B → Prop) :=
   decide_rel x y :: Decision (R x y).
 Global Hint Mode RelDecision ! ! ! : typeclass_instances.
@@ -401,6 +420,7 @@ Notation EqDecision A := (RelDecision (=@{A})).
 
 (** ** Inhabited types *)
 (** This type class collects types that are inhabited. *)
+TC.Pending_mode !.
 Class Inhabited (A : Type) : Type := populate { inhabitant : A }.
 Global Hint Mode Inhabited ! : typeclass_instances.
 Global Arguments populate {_} _ : assert.
@@ -409,6 +429,7 @@ Global Arguments populate {_} _ : assert.
 (** This type class collects types that are proof irrelevant. That means, all
 elements of the type are equal. We use this notion only used for propositions,
 but by universe polymorphism we can generalize it. *)
+TC.Pending_mode !.
 Class ProofIrrel (A : Type) : Prop := proof_irrel (x y : A) : x = y.
 Global Hint Mode ProofIrrel ! : typeclass_instances.
 
@@ -534,12 +555,14 @@ relation [R] instead of [⊆] to support multiple orders on the same type. *)
 Definition strict {A} (R : relation A) : relation A := λ X Y, R X Y ∧ ¬R Y X.
 Global Instance: Params (@strict) 2 := {}.
 
+TC.Pending_mode ! !.
 Class PartialOrder {A} (R : relation A) : Prop := {
   partial_order_pre :: PreOrder R;
   partial_order_anti_symm :: AntiSymm (=) R
 }.
 Global Hint Mode PartialOrder ! ! : typeclass_instances.
 
+TC.Pending_mode ! !.
 Class TotalOrder {A} (R : relation A) : Prop := {
   total_order_partial :: PartialOrder R;
   total_order_trichotomy :: Trichotomy (strict R)
@@ -902,6 +925,27 @@ Section prod_setoid.
   Global Instance prod_equivalence :
     Equivalence (≡@{A}) → Equivalence (≡@{B}) → Equivalence (≡@{A * B}) := _.
 
+
+  Elpi Accumulate  TC.Solver lp:{{ % unif
+    pred remove_equiv_prod_equiv i:term, o:term.
+    remove_equiv_prod_equiv T1 T3 :-
+      T1 = {{@equiv _ (@prod_equiv _ _ _ _)}},
+      T2 = {{@prod_relation lp:F lp:G lp:A lp:B}},
+      coq.unify-eq T1 T2 ok, 
+      remove_equiv_prod_equiv A X,
+      remove_equiv_prod_equiv B Y,
+      {{@prod_relation lp:F lp:G lp:X lp:Y}} = T3.
+    remove_equiv_prod_equiv (app L1) (app L2) :-
+      std.map L1 remove_equiv_prod_equiv L2.
+    remove_equiv_prod_equiv A A.
+
+    tc-stdpp.base.tc-Inj2  A B C R1 R2 R3 F S :-
+      R3 = app [global {{:gref equiv}} | _],
+      remove_equiv_prod_equiv R3 Res,
+      tc-stdpp.base.tc-Inj2  A B C R1 R2 Res F S.
+  }}.
+
+
   Global Instance pair_proper : Proper ((≡) ==> (≡) ==> (≡@{A*B})) pair := _.
   Global Instance pair_equiv_inj : Inj2 (≡) (≡) (≡@{A*B}) pair := _.
   Global Instance fst_proper : Proper ((≡@{A*B}) ==> (≡)) fst := _.
@@ -989,6 +1033,27 @@ Section sum_relation.
 End sum_relation.
 
 Global Instance sum_equiv `{Equiv A, Equiv B} : Equiv (A + B) := sum_relation (≡) (≡).
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  pred remove_equiv_sum_equiv i:term, o:term.
+  remove_equiv_sum_equiv T1 T3 :-
+    T1 = {{@equiv _ (@sum_equiv _ _ _ _)}}, 
+    T2 = {{@sum_relation lp:F lp:G lp:A lp:B}},
+    coq.unify-eq T1 T2 ok, 
+    remove_equiv_sum_equiv A X,
+    remove_equiv_sum_equiv B Y,
+    {{@sum_relation lp:F lp:G lp:X lp:Y}} = T3.
+  remove_equiv_sum_equiv (app L1) (app L2) :- 
+    std.map L1 remove_equiv_sum_equiv L2.
+  remove_equiv_sum_equiv A A.
+  
+  % :after "lastHook" 
+  tc-stdpp.base.tc-Inj A B R1 R2 F S :-
+    remove_equiv_sum_equiv R2 R2',
+    if (same_term R2 R2') fail
+      (tc-stdpp.base.tc-Inj A B R1 R2' F S).
+}}.
+
 Global Instance inl_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inl A B) := _.
 Global Instance inr_proper `{Equiv A, Equiv B} : Proper ((≡) ==> (≡)) (@inr A B) := _.
 Global Instance inl_equiv_inj `{Equiv A, Equiv B} : Inj (≡) (≡) (@inl A B) := _.
@@ -1040,12 +1105,14 @@ Definition proj2_ex {P : Prop} {Q : P → Prop} (p : ∃ x, Q x) : Q (proj1_ex p
 relations on sets: the empty set [∅], the union [(∪)],
 intersection [(∩)], and difference [(∖)], the singleton [{[_]}], the subset
 [(⊆)] and element of [(∈)] relation, and disjointess [(##)]. *)
+TC.Pending_mode !.
 Class Empty A := empty: A.
 Global Hint Mode Empty ! : typeclass_instances.
 Notation "∅" := empty (format "∅") : stdpp_scope.
 
 Global Instance empty_inhabited `(Empty A) : Inhabited A := populate ∅.
 
+TC.Pending_mode !.
 Class Union A := union: A → A → A.
 Global Hint Mode Union ! : typeclass_instances.
 Global Instance: Params (@union) 2 := {}.
@@ -1062,6 +1129,7 @@ Global Typeclasses Opaque union_list.
 Global Instance: Params (@union_list) 3 := {}.
 Notation "⋃ l" := (union_list l) (at level 20, format "⋃  l") : stdpp_scope.
 
+TC.Pending_mode !.
 Class Intersection A := intersection: A → A → A.
 Global Hint Mode Intersection ! : typeclass_instances.
 Global Instance: Params (@intersection) 2 := {}.
@@ -1070,6 +1138,7 @@ Notation "(∩)" := intersection (only parsing) : stdpp_scope.
 Notation "( x ∩.)" := (intersection x) (only parsing) : stdpp_scope.
 Notation "(.∩ x )" := (λ y, intersection y x) (only parsing) : stdpp_scope.
 
+TC.Pending_mode !.
 Class Difference A := difference: A → A → A.
 Global Hint Mode Difference ! : typeclass_instances.
 Global Instance: Params (@difference) 2 := {}.
@@ -1083,12 +1152,14 @@ Notation "(∖*)" := (zip_with (∖)) (only parsing) : stdpp_scope.
 (** The operation [cprod X Y] gives the Cartesian product of set-like structures
 [X] and [Y], i.e., [cprod X Y := { (x,y) | x ∈ X, y ∈ Y }]. The implementation/
 instance depends on the representation of the set. *)
+TC.Pending_mode ! ! -.
 Class CProd A B C := cprod : A → B → C.
 Global Hint Mode CProd ! ! - : typeclass_instances.
 Global Instance: Params (@cprod) 4 := {}.
 (** We do not have a notation for [cprod] (yet) since this operation seems
 not commonly enough used. *)
 
+TC.Pending_mode - !.
 Class Singleton A B := singleton: A → B.
 Global Hint Mode Singleton - ! : typeclass_instances.
 Global Instance: Params (@singleton) 3 := {}.
@@ -1097,6 +1168,7 @@ Notation "{[ x ; y ; .. ; z ]}" :=
   (union .. (union (singleton x) (singleton y)) .. (singleton z))
   (at level 1) : stdpp_scope.
 
+TC.Pending_mode !.
 Class SubsetEq A := subseteq: relation A.
 Global Hint Mode SubsetEq ! : typeclass_instances.
 Global Instance: Params (@subseteq) 2 := {}.
@@ -1144,6 +1216,7 @@ Note that in principle we could reuse the set singleton [{[ _ ]}] for multisets,
 and define [{[+ x1; ..; xn +]}] as [{[ x1 ]} ⊎ .. ⊎ {[ xn ]}]. However, this
 would risk accidentally using [{[ x1; ..; xn ]}] for multisets (leading to
 unexpected results) and lead to ambigious pretty printing for [{[+ x +]}]. *)
+TC.Pending_mode !.
 Class DisjUnion A := disj_union: A → A → A.
 Global Hint Mode DisjUnion ! : typeclass_instances.
 Global Instance: Params (@disj_union) 2 := {}.
@@ -1159,6 +1232,7 @@ Global Instance: Params (@disj_union_list) 3 := {}.
 (* There is no "big" version of [⊎] in unicode, we thus use [⋃+]. *)
 Notation "⋃+ l" := (disj_union_list l) (at level 20, format "⋃+  l") : stdpp_scope.
 
+TC.Pending_mode - !.
 Class SingletonMS A B := singletonMS: A → B.
 Global Hint Mode SingletonMS - ! : typeclass_instances.
 Global Instance: Params (@singletonMS) 3 := {}.
@@ -1175,6 +1249,7 @@ Fixpoint list_to_set `{Singleton A C, Empty C, Union C} (l : list A) : C :=
 Fixpoint list_to_set_disj `{SingletonMS A C, Empty C, DisjUnion C} (l : list A) : C :=
   match l with [] => ∅ | x :: l => {[+ x +]} ⊎ list_to_set_disj l end.
 
+TC.Pending_mode - !.
 Class ScalarMul N A := scalar_mul : N → A → A.
 Global Hint Mode ScalarMul - ! : typeclass_instances.
 (** The [N] arguments is typically [nat] or [Z], so we do not want to rewrite
@@ -1190,9 +1265,11 @@ Notation "(.*: x )" := (λ y, scalar_mul y x) (only parsing) : stdpp_scope.
 (** The class [Lexico A] is used for the lexicographic order on [A]. This order
 is used to create finite maps, finite sets, etc, and is typically different from
 the order [(⊆)]. *)
+TC.Pending_mode !.
 Class Lexico A := lexico: relation A.
 Global Hint Mode Lexico ! : typeclass_instances.
 
+TC.Pending_mode - !.
 Class ElemOf A B := elem_of: A → B → Prop.
 Global Hint Mode ElemOf - ! : typeclass_instances.
 Global Instance: Params (@elem_of) 3 := {}.
@@ -1211,6 +1288,7 @@ Notation "(∈@{ B } )" := (@elem_of _ B _) (only parsing) : stdpp_scope.
 Notation "x ∉@{ B } X" := (¬x ∈@{B} X) (at level 80, only parsing) : stdpp_scope.
 Notation "(∉@{ B } )" := (λ x X, x ∉@{B} X) (only parsing) : stdpp_scope.
 
+TC.Pending_mode !.
 Class Disjoint A := disjoint : A → A → Prop.
 Global Hint Mode Disjoint ! : typeclass_instances.
 Global Instance: Params (@disjoint) 2 := {}.
@@ -1228,9 +1306,11 @@ Notation "(##*)" := (Forall2 (##)) (only parsing) : stdpp_scope.
 Global Hint Extern 0 (_ ## _) => symmetry; eassumption : core.
 Global Hint Extern 0 (_ ##* _) => symmetry; eassumption : core.
 
+TC.Pending_mode - !.
 Class Filter A B := filter: ∀ (P : A → Prop) `{∀ x, Decision (P x)}, B → B.
 Global Hint Mode Filter - ! : typeclass_instances.
 
+TC.Pending_mode - !.
 Class UpClose A B := up_close : A → B.
 Global Hint Mode UpClose - ! : typeclass_instances.
 Notation "↑ x" := (up_close x) (at level 20, format "↑ x").
@@ -1240,26 +1320,31 @@ Notation "↑ x" := (up_close x) (at level 20, format "↑ x").
 and fmap. We use these type classes merely for convenient overloading of
 notations and do not formalize any theory on monads (we do not even define a
 class with the monad laws). *)
+TC.Pending_mode !.
 Class MRet (M : Type → Type) := mret: ∀ {A}, A → M A.
 Global Arguments mret {_ _ _} _ : assert.
 Global Instance: Params (@mret) 3 := {}.
 Global Hint Mode MRet ! : typeclass_instances.
 
+TC.Pending_mode !.
 Class MBind (M : Type → Type) := mbind : ∀ {A B}, (A → M B) → M A → M B.
 Global Arguments mbind {_ _ _ _} _ !_ / : assert.
 Global Instance: Params (@mbind) 4 := {}.
 Global Hint Mode MBind ! : typeclass_instances.
 
+TC.Pending_mode !.
 Class MJoin (M : Type → Type) := mjoin: ∀ {A}, M (M A) → M A.
 Global Arguments mjoin {_ _ _} !_ / : assert.
 Global Instance: Params (@mjoin) 3 := {}.
 Global Hint Mode MJoin ! : typeclass_instances.
 
+TC.Pending_mode !.
 Class FMap (M : Type → Type) := fmap : ∀ {A B}, (A → B) → M A → M B.
 Global Arguments fmap {_ _ _ _} _ !_ / : assert.
 Global Instance: Params (@fmap) 4 := {}.
 Global Hint Mode FMap ! : typeclass_instances.
 
+TC.Pending_mode !.
 Class OMap (M : Type → Type) := omap: ∀ {A B}, (A → option B) → M A → M B.
 Global Arguments omap {_ _ _ _} _ !_ / : assert.
 Global Instance: Params (@omap) 4 := {}.
@@ -1287,6 +1372,7 @@ Notation "ps .*2" := (fmap (M:=list) snd ps)
   (at level 2, left associativity, format "ps .*2").
 
 (** For any monad that has a builtin way to throw an exception/error *)
+TC.Pending_mode ! !.
 Class MThrow (E : Type) (M : Type → Type) := mthrow : ∀ {A}, E → M A.
 Global Arguments mthrow {_ _ _ _} _ : assert.
 Global Instance: Params (@mthrow) 4 := {}.
@@ -1309,6 +1395,7 @@ Global Notation guard := (guard_or ()).
 (** In this section we define operational type classes for the operations
 on maps. In the file [fin_maps] we will axiomatize finite maps.
 The function look up [m !! k] should yield the element at key [k] in [m]. *)
+TC.Pending_mode - - !.
 Class Lookup (K A M : Type) := lookup: K → M → option A.
 Global Hint Mode Lookup - - ! : typeclass_instances.
 Global Instance: Params (@lookup) 5 := {}.
@@ -1320,6 +1407,7 @@ Global Arguments lookup _ _ _ _ !_ !_ / : simpl nomatch, assert.
 
 (** The function [lookup_total] should be the total over-approximation
 of the partial [lookup] function. *)
+TC.Pending_mode - - !.
 Class LookupTotal (K A M : Type) := lookup_total : K → M → A.
 Global Hint Mode LookupTotal - - ! : typeclass_instances.
 Global Instance: Params (@lookup_total) 5 := {}.
@@ -1330,6 +1418,7 @@ Notation "(.!!! i )" := (lookup_total i) (only parsing) : stdpp_scope.
 Global Arguments lookup_total _ _ _ _ !_ !_ / : simpl nomatch, assert.
 
 (** The singleton map *)
+TC.Pending_mode - - !.
 Class SingletonM K A M := singletonM: K → A → M.
 Global Hint Mode SingletonM - - ! : typeclass_instances.
 Global Instance: Params (@singletonM) 5 := {}.
@@ -1337,6 +1426,7 @@ Notation "{[ k := a ]}" := (singletonM k a) (at level 1) : stdpp_scope.
 
 (** The function insert [<[k:=a]>m] should update the element at key [k] with
 value [a] in [m]. *)
+TC.Pending_mode - - !.
 Class Insert (K A M : Type) := insert: K → A → M → M.
 Global Hint Mode Insert - - ! : typeclass_instances.
 Global Instance: Params (@insert) 5 := {}.
@@ -1413,6 +1503,7 @@ Notation "{[ k1 := a1 ; k2 := a2 ; k3 := a3 ; k4 := a4 ; k5 := a5 ; k6 := a6 ; k
 (** The function delete [delete k m] should delete the value at key [k] in
 [m]. If the key [k] is not a member of [m], the original map should be
 returned. *)
+TC.Pending_mode - !.
 Class Delete (K M : Type) := delete: K → M → M.
 Global Hint Mode Delete - ! : typeclass_instances.
 Global Instance: Params (@delete) 4 := {}.
@@ -1420,6 +1511,7 @@ Global Arguments delete _ _ _ !_ !_ / : simpl nomatch, assert.
 
 (** The function [alter f k m] should update the value at key [k] using the
 function [f], which is called with the original value. *)
+TC.Pending_mode - - !.
 Class Alter (K A M : Type) := alter: (A → A) → K → M → M.
 Global Hint Mode Alter - - ! : typeclass_instances.
 Global Instance: Params (@alter) 4 := {}.
@@ -1429,6 +1521,7 @@ Global Arguments alter {_ _ _ _} _ !_ !_ / : simpl nomatch, assert.
 function [f], which is called with the original value at key [k] or [None]
 if [k] is not a member of [m]. The value at [k] should be deleted if [f]
 yields [None]. *)
+TC.Pending_mode - - !.
 Class PartialAlter (K A M : Type) :=
   partial_alter: (option A → option A) → K → M → M.
 Global Hint Mode PartialAlter - - ! : typeclass_instances.
@@ -1439,6 +1532,7 @@ Global Arguments partial_alter _ _ _ _ _ !_ !_ / : simpl nomatch, assert.
 set of type [D] that contains the keys that are a member of [m].
 [D] is an output of the typeclass, i.e., there can be only one instance per map
 type [M]. *)
+TC.Pending_mode ! -.
 Class Dom (M D : Type) := dom: M → D.
 Global Hint Mode Dom ! - : typeclass_instances.
 Global Instance: Params (@dom) 3 := {}.
@@ -1447,6 +1541,7 @@ Global Arguments dom {_ _ _} !_ / : simpl nomatch, assert.
 
 (** The function [merge f m1 m2] should merge the maps [m1] and [m2] by
 constructing a new map whose value at key [k] is [f (m1 !! k) (m2 !! k)].*)
+TC.Pending_mode !.
 Class Merge (M : Type → Type) :=
   merge: ∀ {A B C}, (option A → option B → option C) → M A → M B → M C.
 Global Hint Mode Merge ! : typeclass_instances.
@@ -1456,6 +1551,7 @@ Global Arguments merge _ _ _ _ _ _ !_ !_ / : simpl nomatch, assert.
 (** The function [union_with f m1 m2] is supposed to yield the union of [m1]
 and [m2] using the function [f] to combine values of members that are in
 both [m1] and [m2]. *)
+TC.Pending_mode - !.
 Class UnionWith (A M : Type) :=
   union_with: (A → A → option A) → M → M → M.
 Global Hint Mode UnionWith - ! : typeclass_instances.
@@ -1463,12 +1559,14 @@ Global Instance: Params (@union_with) 3 := {}.
 Global Arguments union_with {_ _ _} _ !_ !_ / : simpl nomatch, assert.
 
 (** Similarly for intersection and difference. *)
+TC.Pending_mode - !.
 Class IntersectionWith (A M : Type) :=
   intersection_with: (A → A → option A) → M → M → M.
 Global Hint Mode IntersectionWith - ! : typeclass_instances.
 Global Instance: Params (@intersection_with) 3 := {}.
 Global Arguments intersection_with {_ _ _} _ !_ !_ / : simpl nomatch, assert.
 
+TC.Pending_mode - !.
 Class DifferenceWith (A M : Type) :=
   difference_with: (A → A → option A) → M → M → M.
 Global Hint Mode DifferenceWith - ! : typeclass_instances.
@@ -1482,6 +1580,7 @@ Global Arguments intersection_with_list _ _ _ _ _ !_ / : assert.
 (** * Notations for lattices. *)
 (** SqSubsetEq registers the "canonical" partial order for a type, and is used
 for the \sqsubseteq symbol. *)
+TC.Pending_mode !.
 Class SqSubsetEq A := sqsubseteq: relation A.
 Global Hint Mode SqSubsetEq ! : typeclass_instances.
 Global Instance: Params (@sqsubseteq) 2 := {}.
@@ -1500,6 +1599,7 @@ Global Instance sqsubseteq_rewrite `{SqSubsetEq A} : RewriteRelation (⊑@{A}) |
 
 Global Hint Extern 0 (_ ⊑ _) => reflexivity : core.
 
+TC.Pending_mode !.
 Class Meet A := meet: A → A → A.
 Global Hint Mode Meet ! : typeclass_instances.
 Global Instance: Params (@meet) 2 := {}.
@@ -1508,6 +1608,7 @@ Notation "(⊓)" := meet (only parsing) : stdpp_scope.
 Notation "( x ⊓.)" := (meet x) (only parsing) : stdpp_scope.
 Notation "(.⊓ y )" := (λ x, meet x y) (only parsing) : stdpp_scope.
 
+TC.Pending_mode !.
 Class Join A := join: A → A → A.
 Global Hint Mode Join ! : typeclass_instances.
 Global Instance: Params (@join) 2 := {}.
@@ -1516,10 +1617,12 @@ Notation "(⊔)" := join (only parsing) : stdpp_scope.
 Notation "( x ⊔.)" := (join x) (only parsing) : stdpp_scope.
 Notation "(.⊔ y )" := (λ x, join x y) (only parsing) : stdpp_scope.
 
+TC.Pending_mode !.
 Class Top A := top : A.
 Global Hint Mode Top ! : typeclass_instances.
 Notation "⊤" := top (format "⊤") : stdpp_scope.
 
+TC.Pending_mode !.
 Class Bottom A := bottom : A.
 Global Hint Mode Bottom ! : typeclass_instances.
 Notation "⊥" := bottom (format "⊥") : stdpp_scope.
@@ -1533,6 +1636,7 @@ equality is needed to implement intersection and difference, but not union.
 
 Note that we cannot use the name [Set] since that is a reserved keyword. Hence
 we use [Set_]. *)
+TC.Pending_mode - ! - - - -.
 Class SemiSet A C `{ElemOf A C,
     Empty C, Singleton A C, Union C} : Prop := {
   not_elem_of_empty (x : A) : x ∉@{C} ∅; (* We prove
@@ -1543,6 +1647,7 @@ Class SemiSet A C `{ElemOf A C,
 }.
 Global Hint Mode SemiSet - ! - - - - : typeclass_instances.
 
+TC.Pending_mode - ! - - - - - -.
 Class Set_ A C `{ElemOf A C, Empty C, Singleton A C,
     Union C, Intersection C, Difference C} : Prop := {
   set_semi_set :: SemiSet A C;
@@ -1551,6 +1656,7 @@ Class Set_ A C `{ElemOf A C, Empty C, Singleton A C,
 }.
 Global Hint Mode Set_ - ! - - - - - - : typeclass_instances.
 
+TC.Pending_mode - ! - -.
 Class TopSet A C `{ElemOf A C, Top C} : Prop := {
   elem_of_top' (x : A) : x ∈@{C} ⊤; (* We prove [elem_of_top : x ∈@{C} ⊤ ↔ True]
   in [sets.v], which is more convenient for rewriting. *)
@@ -1560,6 +1666,7 @@ Global Hint Mode TopSet - ! - - : typeclass_instances.
 (** We axiomative a finite set as a set whose elements can be
 enumerated as a list. These elements, given by the [elements] function, may be
 in any order and should not contain duplicates. *)
+TC.Pending_mode - !.
 Class Elements A C := elements: C → list A.
 Global Hint Mode Elements - ! : typeclass_instances.
 Global Instance: Params (@elements) 3 := {}.
@@ -1590,6 +1697,7 @@ Qed.
 
 (** Decidability of equality of the carrier set is admissible, but we add it
 anyway so as to avoid cycles in type class search. *)
+TC.Pending_mode - ! - - - - - - - -.
 Class FinSet A C `{ElemOf A C, Empty C, Singleton A C, Union C,
     Intersection C, Difference C, Elements A C, EqDecision A} : Prop := {
   fin_set_set :: Set_ A C;
@@ -1598,6 +1706,7 @@ Class FinSet A C `{ElemOf A C, Empty C, Singleton A C, Union C,
 }.
 Global Hint Mode FinSet - ! - - - - - - - - : typeclass_instances.
 
+TC.Pending_mode !.
 Class Size C := size: C → nat.
 Global Hint Mode Size ! : typeclass_instances.
 Global Arguments size {_ _} !_ / : simpl nomatch, assert.
@@ -1641,11 +1750,13 @@ aforementioned [fresh] function on finite sets that respect set equality.
 
 Instead of instantiating [Infinite] directly, consider using [max_infinite] or
 [inj_infinite] from the [infinite] module. *)
+TC.Pending_mode - !.
 Class Fresh A C := fresh: C → A.
 Global Hint Mode Fresh - ! : typeclass_instances.
 Global Instance: Params (@fresh) 3 := {}.
 Global Arguments fresh : simpl never.
 
+TC.Pending_mode !.
 Class Infinite A := {
   infinite_fresh :: Fresh A (list A);
   infinite_is_fresh (xs : list A) : fresh xs ∉ xs;
@@ -1655,7 +1766,15 @@ Global Hint Mode Infinite ! : typeclass_instances.
 Global Arguments infinite_fresh : simpl never.
 
 (** * Miscellaneous *)
+TC.Pending_mode !.
 Class Half A := half: A → A.
 Global Hint Mode Half ! : typeclass_instances.
 Notation "½" := half (format "½") : stdpp_scope.
 Notation "½*" := (fmap (M:=list) half) : stdpp_scope.
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-Decision (match X {{fun (_: prod _ _) => Prop}} _ as XX) S :- !,
+    F = app[{{@uncurry}},_A,_B,{{Prop}},_TT,X],
+    coq.unify-eq XX F ok,
+    tc-stdpp.base.tc-Decision F S.
+}}.

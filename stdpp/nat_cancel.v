@@ -37,12 +37,15 @@ be used it either of the inputs is relatively small. For bigger inputs, an
 approach based on reflection would be better, but for small inputs, the overhead
 of reification will probably not be worth it. *)
 
+TC.Pending_mode ! ! - -.
 Class NatCancel (m n m' n' : nat) := nat_cancel : m' + n = m + n'.
 Global Hint Mode NatCancel ! ! - - : typeclass_instances.
 
 Module nat_cancel.
+  TC.Pending_mode ! ! - -.
   Class NatCancelL (m n m' n' : nat) := nat_cancel_l : m' + n = m + n'.
   Global Hint Mode NatCancelL ! ! - - : typeclass_instances.
+  TC.Pending_mode ! ! - -.
   Class NatCancelR (m n m' n' : nat) := nat_cancel_r : NatCancelL m n m' n'.
   Global Hint Mode NatCancelR ! ! - - : typeclass_instances.
   Global Existing Instance nat_cancel_r | 100.

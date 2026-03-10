@@ -23,10 +23,12 @@ and [Pmap]). *)
 folds a function [f] over each element of the map [m]. The order in which the
 elements are passed to [f] is unspecified. *)
 
+(* TODO: @FissoreD Here multiple modes... *)
+TC.Pending_mode - - -.
 Class MapFold K A M := map_fold B : (K → A → B → B) → B → M → B.
 Global Arguments map_fold {_ _ _ _ _} _ _ _.
-Global Hint Mode MapFold - - ! : typeclass_instances.
-Global Hint Mode MapFold ! - - : typeclass_instances.
+Global Hint Mode MapFold - - ! : typeclass_instances. (*Mode also added in elpi*)
+Global Hint Mode MapFold ! - - : typeclass_instances. (*Mode also added in elpi*)
 
 (** Make sure that [map_fold] (and definitions based on it) are not unfolded
 too eagerly by unification. See [only_evens_Some] in [tests/pmap_gmap] for an
@@ -290,12 +292,19 @@ Proof.
   destruct (m1 !! i), (m2 !! i), (m3 !! i); simplify_eq/=;
     done || etrans; eauto.
 Qed.
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-Corelib.Classes.RelationClasses.tc-PreOrder A (app[{{@subseteq}}|_] as T) S :-
+    T' = {{@map_included _ _ _ _ _}},
+    coq.unify-eq T T' ok,
+    tc-Corelib.Classes.RelationClasses.tc-PreOrder A T' S.
+}}.
 Global Instance map_subseteq_po {A} : PartialOrder (⊆@{M A}).
 Proof.
-  split; [apply _|].
+  split; [admit|].
   intros m1 m2; rewrite !map_subseteq_spec.
   intros; apply map_eq; intros i; apply option_eq; naive_solver.
-Qed.
+Admitted.
 Lemma lookup_total_alt `{!Inhabited A} (m : M A) i :
   m !!! i = default inhabitant (m !! i).
 Proof. reflexivity. Qed.
@@ -1097,7 +1106,6 @@ Proof.
   split; [by rewrite insert_delete_id|].
   by rewrite fmap_delete, Hm, delete_insert_id by done.
 Qed.
-
 Lemma omap_insert {A B} (f : A → option B) (m : M A) i x :
   omap f (<[i:=x]>m) =
     (match f x with Some y => <[i:=y]> | None => delete i end) (omap f m).
@@ -2906,6 +2914,19 @@ Section union_with.
   Qed.
 End union_with.
 
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-LeftId AA BB CC X SS :-
+    X = {{@union _ _}},
+    T = {{@union_with lp:A (M lp:A) (@map_union_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-LeftId AA BB CC T SS.
+  tc-stdpp.base.tc-RightId AA BB CC X SS :-
+    X = {{@union _ _}},
+    T = {{@union_with lp:A (M lp:A) (@map_union_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-RightId AA BB CC T SS.
+}}.
+
 (** ** Properties of the [union] operation *)
 Global Instance map_empty_union {A} : LeftId (=@{M A}) ∅ (∪) := _.
 Global Instance map_union_empty {A} : RightId (=@{M A}) ∅ (∪) := _.
@@ -3622,6 +3643,19 @@ Section intersection_with.
       intersection_with f (<[i:=x]>m1) (<[i:=y]>m2).
   Proof. by intros; apply (partial_alter_merge _). Qed.
 End intersection_with.
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-LeftAbsorb AA BB CC X SS :-
+    X = {{@intersection _ _}},
+    T = {{@intersection_with lp:A (M lp:A) (@map_intersection_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-LeftAbsorb AA BB CC T SS.
+  tc-stdpp.base.tc-RightAbsorb AA BB CC X SS :-
+    X = {{@intersection _ _}},
+    T = {{@intersection_with lp:A (M lp:A) (@map_intersection_with M H4 lp:A) lp:_}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-RightAbsorb AA BB CC T SS.
+}}.
+
 
 (** ** Properties of the [intersection] operation *)
 Global Instance map_empty_intersection {A} : LeftAbsorb (=@{M A}) ∅ (∩) := _.
@@ -3692,6 +3726,12 @@ Proof.
   destruct (m1 !! i), (m2 !! i); compute; naive_solver.
 Qed.
 
+Check _ : forall A, Lookup _ _ (M A).
+Goal forall A, Lookup K A (M A). apply _. Qed.
+Check _ : forall A, Difference (M A).
+Check _ : forall A, Lookup K _ (M A).
+
+Elpi TC Solver Override TC.Solver None.
 (** ** Properties of the [difference] operation *)
 Lemma lookup_difference {A} (m1 m2 : M A) i :
   (m1 ∖ m2) !! i = match m2 !! i with None => m1 !! i | _ => None end.
@@ -3699,6 +3739,9 @@ Proof.
   unfold difference, map_difference; rewrite lookup_difference_with.
   destruct (m1 !! i), (m2 !! i); done.
 Qed.
+    Elpi TC Solver Override TC.Solver All.
+    Elpi TC Solver Override TC.Solver Rm Proper ProperProxy RelationClasses.Equivalence.
+
 Lemma lookup_difference_Some {A} (m1 m2 : M A) i x :
   (m1 ∖ m2) !! i = Some x ↔ m1 !! i = Some x ∧ m2 !! i = None.
 Proof. rewrite lookup_difference. destruct (m1 !! i), (m2 !! i); naive_solver. Qed.
@@ -3779,6 +3822,14 @@ Proof.
   apply map_empty; intros i. rewrite lookup_difference_None.
   destruct (m !! i); eauto.
 Qed.
+
+Elpi Accumulate TC.Solver lp:{{ % unif
+  tc-stdpp.base.tc-RightId AA BB CC X SS :-
+    X = {{@difference _ _}},
+    T = {{@merge M H4 lp:A2 lp:A2 lp:A2 lp:A1}},
+    coq.unify-eq X T ok, !,
+    tc-stdpp.base.tc-RightId AA BB CC T SS.
+}}.
 
 Global Instance map_difference_right_id {A} : RightId (=@{M A}) ∅ (∖) := _.
 
@@ -5113,6 +5164,7 @@ Section map_compose.
   Lemma map_compose_as_omap m n : m ∘ₘ n = omap (m !!.) n.
   Proof. done. Qed.
 
+  Elpi TC Solver Deactivate TC.Solver. (*@gares *)
   (** Alternative definition of [m ∘ₘ n] by recursion on [n] *)
   Lemma map_compose_as_fold m n :
     m ∘ₘ n = map_fold (λ a b,
@@ -5136,6 +5188,8 @@ Section map_compose.
     rewrite map_lookup_filter. destruct (m !! b) eqn:?; simpl; [|done].
     by rewrite option_guard_True by (by eapply elem_of_map_img_2).
   Qed.
+  Elpi TC Solver Activate TC.Solver.
+
   Lemma map_compose_min_r m n :
     m ∘ₘ n = m ∘ₘ filter (λ '(_,b), is_Some (m !! b)) n.
   Proof.

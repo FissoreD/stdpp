@@ -20,6 +20,25 @@ From stdpp Require Import options.
 
 From elpi.apps Require Import tc.
 
+Elpi Accumulate TC.Compiler lp:{{
+  :before "coq->elpi-mode"
+  tc.coq->elpi-mode mode-input (pr out "term") :- !.
+}}.
+
+Elpi Accumulate TC.Solver lp:{{
+  :before "solve-aux-conclusion"
+  tc.solve-aux1 Ctx TyRaw Proof :-
+    tc.time-it _ (tc.normalize-ty TyRaw Ty) "normalize ty",
+    if-true tc.print-goal (coq.say "The goal is <<<" Ty ">>>"),
+    if-true tc.print-goal-pp (coq.say "The goal is <<<" {coq.term->string Ty} ">>>"),
+    tc.time-it tc.oTC-time-mode-check (tc.modes-check Ty) "mode check", !,
+    tc.time-it _ (tc.compile.context Ctx CtxClause) "FELcompile context", !,
+    CtxClause => tc.solve-under-context Ty Proof.
+
+  :before "solve-aux-conclusion"
+  tc.solve-aux1 _ _ tc.tc.mode_fail :- if-true (tc.print-solution; tc.print-solution-pp) (coq.say "Invalid mode call").
+}}.
+
 TC.AddAllClasses.
 TC.AddAllInstances.
 Elpi TC Solver Override TC.Solver Rm Proper ProperProxy RelationClasses.Equivalence.
@@ -1269,7 +1288,13 @@ TC.Pending_mode !.
 Class Lexico A := lexico: relation A.
 Global Hint Mode Lexico ! : typeclass_instances.
 
-TC.Pending_mode - !.
+(* @FissoreD In ElemOf, UnionWith, Filter, IntersectionWith, DefferenceWith, Equiv, RelDecision, Fresh, Lookup I change the mode from - ! to - -
+   There are lots of goals with the shape `ElemOf A (list ?A)`
+   with instances like `ElemOf A (list A)`
+   with the elpi mode o i, it is not possible to use the instance on the
+   goal.
+*)
+TC.Pending_mode - -.
 Class ElemOf A B := elem_of: A → B → Prop.
 Global Hint Mode ElemOf - ! : typeclass_instances.
 Global Instance: Params (@elem_of) 3 := {}.
@@ -1778,3 +1803,14 @@ Elpi Accumulate TC.Solver lp:{{ % unif
     coq.unify-eq XX F ok,
     tc-stdpp.base.tc-Decision F S.
 }}.
+
+(* Elpi Accumulate TC.Solver lp:{{
+
+  :before "0"
+  tc.link.eta.eta-expand T1 (fun _ Ty B) :- 
+    (name T1; is-coq-term T1), !, coq.typecheck T1 (prod _ Ty _) ok, pi x\ coq.mk-app T1 [x] (B x). 
+  % eta-expand T1 (fun _ _ R) :- pi x\ name (R x) T1 [x].
+
+  :before "0"
+  tc.unify-eq X Y :- !, coq.unify-eq X Y ok.
+}}. *)

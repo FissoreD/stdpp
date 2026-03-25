@@ -176,6 +176,8 @@ Section basic_lemmas.
   Global Instance gmultiset_elem_of_dec : RelDecision (∈@{gmultiset A}).
   Proof. refine (λ x X, cast_if (decide (0 < multiplicity x X))); done. Defined.
 
+  Elpi TC Solver Deactivate TC.Solver.
+
   Lemma gmultiset_elem_of_dom x X : x ∈ dom X ↔ x ∈ X.
   Proof.
     unfold dom, gmultiset_dom, elem_of at 2, gmultiset_elem_of, multiplicity.
@@ -187,6 +189,8 @@ Section basic_lemmas.
   Proof. apply forall_proper; intros x. by rewrite gmultiset_elem_of_dom. Qed.
   Lemma gmultiset_Exists_dom P X : set_Exists P (dom X) ↔ set_Exists P X.
   Proof. apply exist_proper; intros x. by rewrite gmultiset_elem_of_dom. Qed.
+  Elpi TC Solver Activate TC.Solver.
+
 
   Global Instance gmultiset_Forall_dec P X :
     (∀ x, Decision (P x)) → Decision (set_Forall P X).
